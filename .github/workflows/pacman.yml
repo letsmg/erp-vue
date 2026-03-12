@@ -1,4 +1,4 @@
-name: Generate Pacman Contribution Graph
+name: Generate Contribution Animations
 
 on:
   workflow_dispatch:
@@ -16,6 +16,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 🐍 Snake
+      - name: Generate snake
+        uses: Platane/snk@v3
+        with:
+          github_user_name: letsmg
+          outputs: |
+            snake.svg
+            snake-dark.svg?palette=github-dark
+
+      # 👾 Pacman
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -24,7 +34,7 @@ jobs:
       - name: Install pacman generator
         run: npm install pacman-contribution-graph
 
-      - name: Generate pacman SVG
+      - name: Generate pacman
         run: |
           npx pacman-contribution-graph \
           --platform github \
@@ -32,9 +42,11 @@ jobs:
           --username letsmg \
           --output pacman-contribution-graph.svg
 
-      - name: Deploy to main branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: main
-          publish_dir: .
+      # 💾 Commit direto na main
+      - name: Commit files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add snake.svg snake-dark.svg pacman-contribution-graph.svg
+          git commit -m "update contribution animations" || echo "no changes"
+          git push

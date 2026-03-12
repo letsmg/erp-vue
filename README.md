@@ -1,8 +1,4 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/pacman-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/pacman.svg">
-  <img alt="pacman contribution graph" src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/pacman.svg">
-</picture>
+<img src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/main/pacman-contribution-graph.svg" />
 
 
 
@@ -143,8 +139,4 @@ ______________________________________
 
 
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/snake-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/snake.svg">
-  <img alt="snake animation" src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/output/snake.svg">
-</picture>
+<img src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/main/snake-dark.svg?palette=github-dark" />
