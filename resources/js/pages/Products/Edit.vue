@@ -1,14 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { clearFormData } from '@/lib/utils';
-// Importação do Draggable
+import { Head, Link } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
+import { useProductEdit } from './useProductEdit';
 import { 
-    Save, ArrowLeft, DollarSign, 
-    Star, Percent, Keyboard, Camera, X,
-    Search, Globe, Code, FileText, GripVertical
+    Save, ArrowLeft, DollarSign, Camera, X, Code, 
+    Search, FileText, GripVertical
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -16,108 +13,16 @@ const props = defineProps({
     suppliers: Array
 });
 
-const activeTab = ref('geral');
-const newImagePreviews = ref([]);
+const { 
+    form, activeTab, newImagePreviews, 
+    handleImageUpload, removeExistingImage, removeNewImage, 
+    profitData, submit 
+} = useProductEdit(props);
 
-// Configurações visuais do arrastar
 const dragOptions = {
     animation: 200,
     ghostClass: "opacity-30",
     dragClass: "rotate-2"
-};
-
-const form = useForm({
-    _method: 'PUT', 
-    supplier_id: props.product.supplier_id,
-    description: props.product.description,
-    brand: props.product.brand,
-    model: props.product.model,
-    size: props.product.size,
-    collection: props.product.collection,
-    gender: props.product.gender || 'Unissex',
-    barcode: props.product.barcode,
-    stock_quantity: props.product.stock_quantity,
-    is_active: Boolean(props.product.is_active),
-    is_featured: Boolean(props.product.is_featured),
-    
-    // Fotos - O Draggable vai manipular diretamente o form.existing_images
-    existing_images: [...props.product.images], 
-    new_images: [], 
-
-    // Financeiro
-    cost_price: props.product.cost_price,
-    sale_price: props.product.sale_price,
-    promo_price: props.product.promo_price,
-    promo_start_at: props.product.promo_start_at ? props.product.promo_start_at.slice(0, 16) : '',
-    promo_end_at: props.product.promo_end_at ? props.product.promo_end_at.slice(0, 16) : '',
-
-    // SEO & Marketing
-    meta_title: props.product.seo?.meta_title || '',
-    meta_description: props.product.seo?.meta_description || '',
-    meta_keywords: props.product.seo?.meta_keywords || '',
-    canonical_url: props.product.seo?.canonical_url || '',
-    h1: props.product.seo?.h1 || '',
-    h2: props.product.seo?.h2 || '',
-    text1: props.product.seo?.text1 || '',
-    text2: props.product.seo?.text2 || '',
-    schema_markup: props.product.seo?.schema_markup || '',
-    google_tag_manager: props.product.seo?.google_tag_manager || '',
-    ads: props.product.seo?.ads || ''
-});
-
-const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const totalCurrent = form.existing_images.length + form.new_images.length;
-    
-    if (totalCurrent + files.length > 6) {
-        alert('O limite máximo é de 6 fotos.');
-        return;
-    }
-
-    files.forEach(file => {
-        form.new_images.push(file);
-        newImagePreviews.value.push(URL.createObjectURL(file));
-    });
-};
-
-const removeExistingImage = (index) => {
-    form.existing_images.splice(index, 1);
-};
-
-const removeNewImage = (index) => {
-    form.new_images.splice(index, 1);
-    newImagePreviews.value.splice(index, 1);
-};
-
-const handleKeydown = (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'l') {
-        e.preventDefault();
-        if(confirm('Limpar todos os campos?')) {
-            clearFormData(form);
-            newImagePreviews.value = [];
-        }
-    }
-};
-
-onMounted(() => window.addEventListener('keydown', handleKeydown, true));
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown, true));
-
-const profitData = computed(() => {
-    const cost = parseFloat(form.cost_price) || 0;
-    const sale = parseFloat(form.sale_price) || 0;
-    const profit = sale - cost;
-    const margin = cost > 0 ? (profit / cost) * 100 : 0;
-    return {
-        value: profit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        percentage: margin.toFixed(2)
-    };
-});
-
-const submit = () => {
-    form.post(route('products.update', props.product.id), {
-        forceFormData: true,
-        preserveScroll: true,
-    });
 };
 </script>
 
@@ -208,11 +113,15 @@ const submit = () => {
                             <input v-model="form.barcode" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Marca</label>
                             <input v-model="form.brand" type="text" placeholder="Marca" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
                             <input v-model="form.model" type="text" placeholder="Modelo" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
                             <input v-model="form.collection" type="text" placeholder="Coleção" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
                             <input v-model="form.size" type="text" placeholder="Tamanho" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
                         <div class="grid grid-cols-2 gap-4 md:col-span-2">
