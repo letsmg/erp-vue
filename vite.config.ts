@@ -8,7 +8,7 @@ import path from 'path';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.ts'], // Notei que seu arquivo é .ts
+            input: ['resources/js/app.ts'], // Se o arquivo for .ts
             ssr: 'resources/js/ssr.ts',
             refresh: true,
         }),
@@ -23,7 +23,7 @@ export default defineConfig({
         }),
         wayfinder({
             formVariants: true,
-            // Adicione esta linha para evitar que o erro do Artisan trave o Vite
+            // Desativado para não travar o build no servidor
             generateOnRun: false, 
         }),
     ],
@@ -32,5 +32,21 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
         extensions: ['.js', '.ts', '.vue', '.json'],
+    },
+    build: {
+        // Ativa a minificação pesada para o servidor
+        minify: 'terser', 
+        sourcemap: false, // Deixa o build mais leve no servidor
+        chunkSizeWarningLimit: 1600,
+        rollupOptions: {
+            output: {
+                // Organiza melhor os arquivos gerados
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        return 'vendor';
+                    }
+                },
+            },
+        },
     },
 });
