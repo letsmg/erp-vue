@@ -14,7 +14,7 @@ class SupplierTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(); // Carrega seus seeders (SingleUserSeeder, etc)
+        $admin = User::factory()->create(['access_level' => 1]);
     }
 
     /** 1. TESTES DE ACESSO (PROTEÇÃO) **/
