@@ -1,0 +1,62 @@
+name: 🚀 Deploy Laravel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clonar repositório
+        uses: actions/checkout@v4
+
+      - name: 🔑 Configurar SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 🚀 Executar deploy no servidor
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@147.15.80.52 << 'EOF'
+            
+            echo "📂 Entrando no projeto"
+            cd /var/www/erp
+
+            echo "📥 Atualizando código"
+            git reset --hard
+            git pull origin main
+
+            echo "📦 Instalando dependências PHP"
+            composer install --no-dev --optimize-autoloader
+
+            echo "📦 Instalando dependências Node"
+            npm install
+
+            echo "⚡ Build do Vite"
+            npm run build
+
+            echo "🧹 Limpando caches"
+            php artisan optimize:clear
+
+            echo "⚙️ Cacheando configs"
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            echo "🗄️ Rodando migrations"
+            php artisan migrate --force
+
+            echo "🔐 Ajustando permissões"
+            chown -R www-data:www-data /var/www/erp
+            chmod -R 775 storage bootstrap/cache
+
+            echo "🔄 Reiniciando serviços"
+            sudo systemctl restart php8.3-fpm
+            sudo systemctl restart nginx
+
+            echo "✅ Deploy finalizado"
+
+          EOF
