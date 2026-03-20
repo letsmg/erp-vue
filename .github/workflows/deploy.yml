@@ -84,7 +84,7 @@ jobs:
             php artisan migrate --force --seed
 
             echo "🔐 Restaurando permissões de produção..."
-            sudo chown -R www-data:www-data /var/www/erp
+            #sudo chown -R www-data:www-data /var/www/erp
             sudo chmod -R 775 storage bootstrap/cache
 
             echo "🔄 Reiniciando PHP..."
