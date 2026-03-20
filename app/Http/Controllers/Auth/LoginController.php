@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use App\Services\AuthService;
 use Inertia\Inertia;
-use App\Mail\RecuperarSenhaMail;
-use Illuminate\Support\Facades\Mail;
 
 class LoginController extends Controller
 {
+    protected $service;
+
+    public function __construct(AuthService $service)
+    {
+        $this->service = $service;
+    }
+
     public function showLogin() {
         return Inertia::render('Auth/Login');
     }
@@ -24,10 +28,11 @@ class LoginController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:150',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6|confirmed', // Validação de 6 chars e confirmação
+            'password' => 'required|min:6|confirmed',
         ]);
 
-        User::create($data);
+        $this->service->register($data);
+
         return redirect()->route('login')->with('success', 'Cadastro realizado!');
     }
 
@@ -38,9 +43,7 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Tentamos o login com o adicional do is_active
-        if (Auth::attempt(['email' => $credentials['email'], 'password' => $credentials['password'], 'is_active' => true], $request->remember)) {
-            $request->session()->regenerate();
+        if ($this->service->login($credentials, $request->remember)) {
             return redirect()->intended('/dashboard');
         }
 
@@ -49,48 +52,18 @@ class LoginController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-
-        if (Auth::attempt($credentials, $request->remember)) {
-            $request->session()->regenerate();
-
-            // Redireciona para o Dashboard
-            return redirect()->intended('/dashboard');
-        }
-
-        // Se falhar, retorna com erro de validação
-        return back()->withErrors([
-            'email' => 'As credenciais não coincidem com nossos registros.',
-        ])->onlyInput('email');
-    }
-
     public function logout(Request $request)
     {
-        Auth::logout();
-        
-        // Importante para limpar a sessão no banco e evitar o erro 419 ao tentar relogar
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $this->service->logout($request);
 
         return redirect('/');
     }
 
-    /**
-     * Exibe a tela de "Esqueci minha senha"
-     */
     public function showForgotPassword()
     {
         return Inertia::render('Auth/ForgotPassword');
     }
 
-    /**
-     * Processa o pedido de recuperação e envia o e-mail
-     */
     public function sendResetLinkEmail(Request $request)
     {
         $request->validate([
@@ -98,17 +71,13 @@ class LoginController extends Controller
         ]);
 
         try {
-            // Passamos a URL para o construtor da classe
-            $url = route('login'); 
-            
-            Mail::to($request->email)->send(new RecuperarSenhaMail($url));
-            
+            $this->service->sendResetLink($request->email);
+
             return back()->with('success', 'Link enviado com sucesso!');
         } catch (\Exception $e) {
-            // Se der erro de API do Resend, ele vai cair aqui
-            return back()->withErrors(['email' => 'Erro no provedor de e-mail: ' . $e->getMessage()]);
+            return back()->withErrors([
+                'email' => 'Erro no provedor de e-mail: ' . $e->getMessage()
+            ]);
         }
     }
-
-    
 }
