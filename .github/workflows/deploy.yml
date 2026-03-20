@@ -7,6 +7,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    # ✅ Adiciona o PostgreSQL como serviço para os testes
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: erp_vue_laravel
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123456
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -14,14 +31,14 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql
           cache: composer # ⚡ Cache de dependências PHP
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # ⬆️ Atualizado para evitar avisos de versão antiga
-          cache: 'npm' # ⚡ Cache de dependências Node
+          node-version: '22'
+          cache: 'npm'
 
       - name: Install Dependencies
         run: |
@@ -54,16 +71,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@147.15.80.52 << 'EOF'
             set -e
             
-            # 1. Resolve o erro de segurança do Git
             echo "🛡️ Configurando exceção de segurança do Git"
             git config --global --add safe.directory /var/www/erp
 
             cd /var/www/erp
             
             echo "📥 Atualizando código..."
-            # Garante que o usuário ubuntu seja dono temporariamente para o git pull não falhar
             sudo chown -R ubuntu:www-data /var/www/erp
-            
             git reset --hard
             git pull origin main
 
