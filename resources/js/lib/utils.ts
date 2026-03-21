@@ -10,10 +10,9 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Formata Telefone e bloqueia letras.
- * Aceita: (xx) xxxx-xxxx ou (xx) xxxxx-xxxx
  */
 export const maskPhone = (value: string): string => {
-    let r = value.replace(/\D/g, ""); // Remove tudo que não é número
+    let r = value.replace(/\D/g, ""); 
     if (r.length > 11) r = r.substring(0, 11);
 
     if (r.length > 10) {
@@ -51,7 +50,7 @@ export const maskCEP = (value: string): string => {
     return r.replace(/^(\d{5})(\d)/, "$1-$2");
 };
 
-// --- FUNÇÕES DE TESTE EXISTENTES ---
+// --- FUNÇÕES DE TESTE ---
 
 export const fillFormData = (form: any, suppliers: any[] = []) => {
     if (!form) return;
@@ -59,7 +58,6 @@ export const fillFormData = (form: any, suppliers: any[] = []) => {
     const ufs = ['SP', 'RJ', 'MG', 'PR', 'SC', 'RS', 'BA', 'GO', 'CE', 'PE'];
 
     const fakeData: Record<string, any> = {
-        // ... (mantenha os campos de fornecedor e básicos iguais)
         name: () => {
             const nomes = ['João', 'Maria', 'Pedro', 'Ana', 'Carlos', 'Lucas'];
             const sobrenomes = ['Silva', 'Souza', 'Oliveira', 'Costa', 'Pereira'];
@@ -98,10 +96,11 @@ export const fillFormData = (form: any, suppliers: any[] = []) => {
         is_featured: () => Math.random() > 0.5,
         supplier_id: () => (suppliers && suppliers.length > 0) ? suppliers[0].id : '',
 
-        // --- NOVOS CAMPOS DE SEO E MARKETING ---
+        // --- SEO E MARKETING (CORREÇÃO DE ARRAY AQUI) ---
         meta_title: () => "Tênis Nike Air Max 2026 - Oferta Especial",
-        meta_description: () => "Compre o novo Air Max 2026 com tecnologia de amortecimento turbo. Frete grátis para todo o Brasil.",
-        meta_keywords: () => "tênis nike, air max 2026, corrida, esportes",
+        meta_description: () => "Compre o novo Air Max 2026 com tecnologia de amortecimento turbo.",
+        // CORREÇÃO: Transformamos a string em Array para o componente de tags entender
+        meta_keywords: () => ["tênis nike", "air max 2026", "corrida", "esportes"],
         canonical_url: () => "https://sualoja.com.br/produtos/tenis-nike-2026",
         h1: () => "Tênis Nike Air Max 2026 Original",
         h2: () => "O máximo em performance e estilo",

@@ -2,7 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
-import { useProductForm } from './useProductForm'; // Importando sua lógica
+import { useProductForm } from './useProductForm'; 
 import { 
     Save, ArrowLeft, DollarSign, Camera, X, Move,
     Search, Code, FileText
@@ -12,13 +12,20 @@ const props = defineProps({
     suppliers: Array
 });
 
-// Desestruturamos tudo que o Composable oferece
+// AQUI ESTÁ A CORREÇÃO: Importando tagInput, addTag e removeTag
 const { 
-    form, activeTab, imagePreviews, 
-    handleImageUpload, removeImage, onDragEnd, 
-    profitData, submit 
+    form, 
+    activeTab, 
+    imagePreviews, 
+    tagInput,    // <--- ADICIONADO
+    addTag,      // <--- ADICIONADO
+    removeTag,   // <--- ADICIONADO
+    handleImageUpload, 
+    removeImage, 
+    onDragEnd, 
+    profitData, 
+    submit 
 } = useProductForm(props);
-
 </script>
 
 <template>
@@ -199,9 +206,36 @@ const {
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Title</label>
                             <input v-model="form.meta_title" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Keywords</label>
-                            <input v-model="form.meta_keywords" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">
+                                Meta Keywords (Digite e aperte Enter)
+                            </label>
+                            
+                            <div class="flex flex-wrap gap-2 p-3 border border-gray-100 bg-gray-50 rounded-2xl min-h-[50px] transition-all focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100">
+                                
+                                <div 
+                                    v-for="(tag, index) in form.meta_keywords" 
+                                    :key="index"
+                                    class="flex items-center bg-indigo-600 text-white text-[10px] font-black uppercase tracking-tight px-3 py-1.5 rounded-xl shadow-sm animate-in zoom-in-95 duration-200"
+                                >
+                                    {{ tag }}
+                                    <button 
+                                        type="button" 
+                                        @click="removeTag(index)" 
+                                        class="ml-2 hover:bg-indigo-700 rounded-full p-0.5 transition"
+                                    >
+                                        <X class="w-3 h-3" />
+                                    </button>
+                                </div>
+                                
+                                <input 
+                                    v-model="tagInput" 
+                                    @keydown.enter.prevent="addTag"
+                                    type="text" 
+                                    class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold min-w-[150px] p-0 placeholder:text-gray-300"
+                                    placeholder="TAG + ENTER" 
+                                />
+                            </div>
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Description</label>

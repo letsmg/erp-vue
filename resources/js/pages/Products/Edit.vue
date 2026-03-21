@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
+import { ref, onMounted } from 'vue';
 import { useProductEdit } from './useProductEdit';
 import { 
     Save, ArrowLeft, DollarSign, Camera, X, Code, 
@@ -18,6 +19,37 @@ const {
     handleImageUpload, removeExistingImage, removeNewImage, 
     profitData, submit 
 } = useProductEdit(props);
+
+// --- Lógica de Meta Keywords (Tags) ---
+const keywordsArray = ref([]);
+const newTag = ref('');
+
+onMounted(() => {
+    if (form.meta_keywords) {
+        keywordsArray.value = form.meta_keywords.split(',')
+            .map(t => t.trim())
+            .filter(t => t !== '');
+    }
+});
+
+const addTag = () => {
+    const tag = newTag.value.trim().replace(/,/g, '');
+    if (tag && !keywordsArray.value.includes(tag)) {
+        keywordsArray.value.push(tag);
+        syncKeywords();
+    }
+    newTag.value = '';
+};
+
+const removeTag = (index) => {
+    keywordsArray.value.splice(index, 1);
+    syncKeywords();
+};
+
+const syncKeywords = () => {
+    form.meta_keywords = keywordsArray.value.join(',');
+};
+// ---------------------------------------
 
 const dragOptions = {
     animation: 200,
@@ -113,20 +145,31 @@ const dragOptions = {
                             <input v-model="form.barcode" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Marca</label>
-                            <input v-model="form.brand" type="text" placeholder="Marca" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
-                            <input v-model="form.model" type="text" placeholder="Modelo" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Marca</label>
+                                <input v-model="form.brand" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
+                                <input v-model="form.model" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
-                            <input v-model="form.collection" type="text" placeholder="Coleção" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Modelo</label>
-                            <input v-model="form.size" type="text" placeholder="Tamanho" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Coleção</label>
+                                <input v-model="form.collection" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            </div>
+                            <div class="flex flex-col">
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Tamanho</label>
+                                <input v-model="form.size" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4 md:col-span-2">
                             <select v-model="form.gender" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold uppercase text-[10px]">
-                                <option>Masculino</option><option>Feminino</option><option>Unissex</option><option>Infantil</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Unissex">Unissex</option>
+                                <option value="Infantil">Infantil</option>
                             </select>
                             <input v-model="form.stock_quantity" type="number" placeholder="Qtd. Estoque" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-black" />
                         </div>
@@ -209,10 +252,27 @@ const dragOptions = {
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Title</label>
                             <input v-model="form.meta_title" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
                         </div>
+                        
                         <div>
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Keywords</label>
-                            <input v-model="form.meta_keywords" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" />
+                            <div class="flex flex-wrap items-center gap-2 p-2.5 border border-gray-100 bg-gray-50 rounded-2xl min-h-[46px]">
+                                <span v-for="(tag, index) in keywordsArray" :key="index" class="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-200 text-indigo-600 text-[10px] font-black uppercase rounded-lg shadow-sm">
+                                    {{ tag }}
+                                    <button type="button" @click="removeTag(index)" class="text-gray-400 hover:text-red-500 transition">
+                                        <X class="w-3 h-3" />
+                                    </button>
+                                </span>
+                                <input 
+                                    v-model="newTag" 
+                                    type="text" 
+                                    @keydown.enter.prevent="addTag"
+                                    @keydown.comma.prevent="addTag"
+                                    placeholder="TAG + ENTER"
+                                    class="flex-1 bg-transparent border-none focus:ring-0 text-[11px] font-bold placeholder:text-gray-300 placeholder:font-black"
+                                />
+                            </div>
                         </div>
+
                         <div class="md:col-span-2">
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2 italic">Meta Description</label>
                             <textarea v-model="form.meta_description" rows="2" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold"></textarea>

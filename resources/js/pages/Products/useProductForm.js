@@ -5,6 +5,7 @@ import { fillFormData, clearFormData } from '@/lib/utils';
 export function useProductForm(props) {
     const activeTab = ref('geral');
     const imagePreviews = ref([]);
+    const tagInput = ref('');
 
     const form = useForm({
         supplier_id: null,
@@ -26,7 +27,7 @@ export function useProductForm(props) {
         promo_end_at: '',
         meta_title: '',
         meta_description: '',
-        meta_keywords: '',
+        meta_keywords: [], // No front-end ele é um Array
         canonical_url: '',
         h1: '',
         h2: '',
@@ -36,6 +37,21 @@ export function useProductForm(props) {
         google_tag_manager: '',
         ads: ''
     });
+
+    const addTag = () => {
+        const val = tagInput.value.trim();
+        if (val) {
+            if (!Array.isArray(form.meta_keywords)) form.meta_keywords = [];
+            if (!form.meta_keywords.includes(val)) {
+                form.meta_keywords.push(val);
+            }
+            tagInput.value = ''; 
+        }
+    };
+
+    const removeTag = (index) => {
+        form.meta_keywords.splice(index, 1);
+    };
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -56,7 +72,9 @@ export function useProductForm(props) {
     };
 
     const onDragEnd = () => {
-        imagePreviews.value = form.images.map(file => URL.createObjectURL(file));
+        imagePreviews.value = form.images.map(file => 
+            file instanceof File ? URL.createObjectURL(file) : file
+        );
     };
 
     const handleKeydown = (e) => {
@@ -68,6 +86,7 @@ export function useProductForm(props) {
             e.preventDefault();
             clearFormData(form);
             imagePreviews.value = [];
+            tagInput.value = '';
         }
     };
 
@@ -86,19 +105,29 @@ export function useProductForm(props) {
     });
 
     const submit = () => {
-        form.post(route('products.store'), {
+        // --- CORREÇÃO AQUI ---
+        // Criamos uma cópia para transformar o Array em String antes de enviar ao Laravel
+        const dataToSend = {
+            ...form.data(),
+            meta_keywords: Array.isArray(form.meta_keywords) 
+                ? form.meta_keywords.join(', ') 
+                : form.meta_keywords
+        };
+
+        form.transform(() => dataToSend).post(route('products.store'), {
             preserveScroll: true,
             forceFormData: true,
             onSuccess: () => {
                 form.reset();
                 imagePreviews.value = [];
+                tagInput.value = '';
             },
         });
     };
 
     return {
-        form, activeTab, imagePreviews, 
-        handleImageUpload, removeImage, onDragEnd, 
-        profitData, submit
+        form, activeTab, imagePreviews, tagInput,
+        addTag, removeTag, handleImageUpload, 
+        removeImage, onDragEnd, profitData, submit
     };
 }

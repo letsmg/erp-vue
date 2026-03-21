@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Supplier;
-use Illuminate\Http\Request;
+use App\Http\Requests\Product\StoreProductRequest;
+use App\Http\Requests\Product\UpdateProductRequest;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -30,67 +31,27 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $data = $request->validate([
-            'supplier_id'        => 'required|exists:suppliers,id',
-            'description'       => 'required|string|max:255',            
-            'brand'             => 'nullable|string|max:100',
-            'model'             => 'nullable|string|max:100',
-            'cost_price'        => 'required|numeric|min:0',
-            'sale_price'        => 'required|numeric|min:0',
-            'stock_quantity'    => 'required|integer|min:0',
-            'is_active'         => 'boolean',
-            // Novos campos de SEO
-            'meta_title'        => 'nullable|string|max:70',
-            'meta_description'  => 'nullable|string|max:160',
-            'meta_keywords'     => 'nullable|string',
-            'canonical_url'     => 'nullable|url',
-            'h1'                => 'nullable|string',
-            'text1'             => 'nullable|string',
-            'h2'                => 'nullable|string',
-            'text2'             => 'nullable|string',
-            'schema_markup'     => 'nullable|string',
-            'google_tag_manager'=> 'nullable|string',
-            'ads'               => 'nullable|string',
-            'images'            => 'required|array|min:1|max:6',
-            'images.*'          => 'image|mimes:jpg,jpeg,png|max:2048', 
-        ]);
+        $data = $request->validated();
 
         return DB::transaction(function () use ($request, $data) {
+            // Regras de negócio: Sempre inativo e slug automático
+            $data['is_active'] = false;
             $data['slug'] = Str::slug($data['description']) . '-' . Str::lower(Str::random(5));
+            
             $product = Product::create($data);
 
+            // Processar Imagens
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $file) {
-                    if (!$this->isImageSafe($file)) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'images' => 'Uma das imagens contém conteúdo impróprio.'
-                        ]);
-                    }
-                    $path = $file->store('products', 'public');
-                    // Ajuste: Salvando apenas o nome do arquivo para o banco ficar limpo
-                    $product->images()->create(['path' => basename($path)]);
-                }
+                $this->uploadImages($product, $request->file('images'));
             }
 
-            // Integração completa com SeoMetadata
-            $product->seo()->create([
-                'slug'               => $product->slug,
-                'meta_title'         => $data['meta_title'] ?? $data['description'],
-                'meta_description'   => $data['meta_description'] ?? null,
-                'meta_keywords'      => $data['meta_keywords'] ?? null,
-                'canonical_url'      => $data['canonical_url'] ?? null,
-                'h1'                 => $data['h1'] ?? $data['description'],
-                'text1'              => $data['text1'] ?? null,
-                'h2'                 => $data['h2'] ?? null,
-                'text2'              => $data['text2'] ?? null,
-                'schema_markup'      => $data['schema_markup'] ?? null,
-                'google_tag_manager' => $data['google_tag_manager'] ?? null,
-                'ads'                => $data['ads'] ?? null,
-            ]);
+            // Sincronizar SEO (Só cria se tiver algo preenchido)
+            $this->syncSeoMetadata($product, $request);
 
-            return redirect()->route('products.index')->with('message', 'Produto cadastrado com sucesso!');
+            return redirect()->route('products.index')
+                ->with('message', 'Produto cadastrado com sucesso! Pendente de ativação.');
         });
     }
 
@@ -102,122 +63,98 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
-        $data = $request->validate([
-            'supplier_id'        => 'required|exists:suppliers,id',
-            'description'       => 'required|string|max:255',
-            'cost_price'        => 'required|numeric|min:0',
-            'sale_price'        => 'required|numeric|min:0',
-            'stock_quantity'    => 'required|integer|min:0',
-            'is_active'         => 'boolean',
-            'is_featured'       => 'boolean',
-            'meta_title'        => 'nullable|string|max:70',
-            'meta_description'  => 'nullable|string|max:160',
-            'meta_keywords'     => 'nullable|string',
-            'h1'                => 'nullable|string',
-            'schema_markup'     => 'nullable|string',
-            'google_tag_manager'=> 'nullable|string',
-            'existing_images'   => 'nullable|array', 
-            'new_images'        => 'nullable|array|max:6',
-            'new_images.*'      => 'image|mimes:jpg,jpeg,png|max:2048',
-        ]);
-
-        $totalImages = count($request->existing_images ?? []) + count($request->file('new_images') ?? []);
-        if ($totalImages < 1) {
-            return back()->withErrors(['new_images' => 'O produto deve ter pelo menos uma imagem.']);
-        }
+        $data = $request->validated();
 
         return DB::transaction(function () use ($request, $data, $product) {
+            // 1. Gestão de Imagens Antigas
             $existingIds = collect($request->existing_images)->pluck('id')->toArray();
             $imagesToDelete = $product->images()->whereNotIn('id', $existingIds)->get();
 
             foreach ($imagesToDelete as $oldImg) {
-                // Ajuste para o path que agora é salvo sem o prefixo 'products/'
                 Storage::disk('public')->delete('products/' . $oldImg->path);
                 $oldImg->delete();
             }
 
+            // 2. Novas Imagens
             if ($request->hasFile('new_images')) {
-                foreach ($request->file('new_images') as $file) {
-                    if (!$this->isImageSafe($file)) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
-                            'new_images' => 'Uma das novas imagens foi bloqueada.'
-                        ]);
-                    }
-                    $path = $file->store('products', 'public');
-                    $product->images()->create(['path' => basename($path)]);
-                }
+                $this->uploadImages($product, $request->file('new_images'));
             }
 
+            // 3. Atualizar Slug se a descrição mudar
             if ($product->description !== $data['description']) {
                 $data['slug'] = Str::slug($data['description']) . '-' . Str::lower(Str::random(5));
             }
 
             $product->update($data);
 
-            // Update de SEO com TODOS os campos integrados
-            $product->seo()->updateOrCreate(
-                ['seoable_id' => $product->id, 'seoable_type' => get_class($product)],
-                [
-                    'slug'               => $product->slug,
-                    'meta_title'         => $request->meta_title ?? $data['description'],
-                    'meta_description'   => $request->meta_description ?? null,
-                    'meta_keywords'      => $request->meta_keywords ?? null,
-                    'canonical_url'      => $request->canonical_url ?? null,
-                    'h1'                 => $request->h1 ?? $data['description'],
-                    'text1'              => $request->text1 ?? null,
-                    'h2'                 => $request->h2 ?? null,
-                    'text2'              => $request->text2 ?? null,
-                    'schema_markup'      => $request->schema_markup ?? null,
-                    'google_tag_manager' => $request->google_tag_manager ?? null,
-                    'ads'                => $request->ads ?? null,
-                ]
-            );
+            // 4. Sincronizar SEO
+            $this->syncSeoMetadata($product, $request);
 
             return redirect()->route('products.index')->with('message', 'Produto atualizado!');
         });
     }
 
-
-
-
     public function destroy(Product $product)
     {
-        // Garante que as imagens sejam carregadas, mesmo que o relacionamento esteja bugado
-        $images = $product->images()->get();
-
-        if ($images && $images->count() > 0) {
-            foreach ($images as $img) {
-                // Verificamos se o arquivo existe antes de tentar deletar
-                // Usamos 'products/' . $img->path porque agora o banco só guarda o nome puro
-                if (Storage::disk('public')->exists('products/' . $img->path)) {
-                    Storage::disk('public')->delete('products/' . $img->path);
-                }
-                
-                $img->delete();
-            }
+        foreach ($product->images as $img) {
+            Storage::disk('public')->delete('products/' . $img->path);
+            $img->delete();
         }
 
-        // Opcional: Deletar o SEO antes do produto (embora o cascade do banco costume resolver)
         if ($product->seo) {
             $product->seo->delete();
         }
 
         $product->delete();
 
-        return redirect()->route('products.index')->with('message', 'Produto removido com sucesso.');
+        return redirect()->route('products.index')->with('message', 'Produto removido.');
     }
 
+    /**
+     * Métodos Privados Auxiliares
+     */
 
+    private function uploadImages($product, array $files)
+    {
+        foreach ($files as $file) {
+            if (!$this->isImageSafe($file)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'images' => 'Uma das imagens contém conteúdo impróprio.'
+                ]);
+            }
+            $path = $file->store('products', 'public');
+            $product->images()->create(['path' => basename($path)]);
+        }
+    }
 
+    private function syncSeoMetadata($product, $request)
+    {
+        $seoFields = [
+            'meta_title', 'meta_description', 'meta_keywords', 'canonical_url', 
+            'h1', 'text1', 'h2', 'text2', 'schema_markup', 'google_tag_manager', 'ads'
+        ];
+
+        // Só processamos se houver algum campo preenchido ou se já existir SEO (para updates)
+        $hasInput = collect($seoFields)->some(fn($f) => $request->filled($f));
+
+        if ($hasInput || $product->seo()->exists()) {
+            $product->seo()->updateOrCreate(
+                ['seoable_id' => $product->id, 'seoable_type' => get_class($product)],
+                array_merge(
+                    $request->only($seoFields),
+                    ['slug' => $product->slug]
+                )
+            );
+        }
+    }
 
     private function isImageSafe($image)
     {
         $credentialPath = base_path('google-credentials.json');
 
         if (!class_exists('Google\Cloud\Vision\V1\ImageAnnotatorClient') || !file_exists($credentialPath)) {
-            Log::info("Moderação de imagem ignorada: Biblioteca ou credenciais ausentes.");
             return true; 
         }
 
@@ -229,13 +166,10 @@ class ProductController extends Controller
             $safe = $response->getSafeSearchAnnotation();
             $imageAnnotator->close();
 
-            $unsafeLevels = [3, 4, 5];
-            if (in_array($safe->getAdult(), $unsafeLevels) || in_array($safe->getViolence(), $unsafeLevels)) {
-                return false;
-            }
-            return true;
+            $unsafeLevels = [3, 4, 5]; // Likely to Very Likely
+            return !(in_array($safe->getAdult(), $unsafeLevels) || in_array($safe->getViolence(), $unsafeLevels));
         } catch (\Exception $e) {
-            Log::error("Erro técnico na API Vision: " . $e->getMessage());
+            Log::error("Erro API Vision: " . $e->getMessage());
             return true;
         }
     }

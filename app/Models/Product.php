@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Product extends Model
 {
     use HasFactory;
-    
+        
     protected $fillable = [
         'supplier_id', 'description', 'brand', 'model', 'size', 
         'collection', 'gender', 'cost_price', 'sale_price', 
@@ -29,7 +29,7 @@ class Product extends Model
     ];
 
     // Faz o current_price aparecer automaticamente no Vue/Inertia
-    protected $appends = ['current_price'];
+    protected $appends = ['current_price', 'seo_display'];
 
     public function supplier(): BelongsTo
     {
@@ -64,5 +64,18 @@ class Product extends Model
             }
         }
         return (float) $this->sale_price;
+    }
+
+    public function getSeoDisplayAttribute()
+    {
+        $seo = $this->seo; // Relacionamento MorphOne
+
+        return [
+            'meta_title'       => $seo?->meta_title ?: $this->description,
+            'meta_description' => $seo?->meta_description ?: "Confira {$this->description} com o melhor preço na nossa loja.",
+            'slug'             => $seo?->slug ?: $this->slug, // Usa o slug do produto se o do SEO sumir
+            'h1'               => $seo?->h1 ?: $this->description,
+            'meta_keywords'    => $seo?->meta_keywords ?: str_replace(' ', ', ', $this->description),
+        ];
     }
 }

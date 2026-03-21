@@ -3,7 +3,14 @@ import StoreLayout from '@/Layouts/StoreLayout.vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { useStoreIndex } from './useStoreIndex';
-import { SlidersHorizontal, ShoppingBag, ChevronLeft, ChevronRight, Tag, Percent, X } from 'lucide-vue-next';
+import { 
+    SlidersHorizontal, 
+    ShoppingBag, 
+    ChevronLeft, 
+    ChevronRight, 
+    X, 
+    ExternalLink 
+} from 'lucide-vue-next';
 
 const props = defineProps({
     products: Object,
@@ -18,6 +25,7 @@ const { search, minPrice, maxPrice, brand } = useStoreIndex(props);
 // Lógica do Modal
 const isModalOpen = ref(false);
 const selectedProduct = ref(null);
+
 const openDetails = (p) => { 
     selectedProduct.value = p; 
     isModalOpen.value = true; 
@@ -37,7 +45,10 @@ const scroll = (id, direction) => {
     }
 };
 
-onMounted(() => { timer = setInterval(() => scroll('hero-carousel', 'right'), 7000); });
+onMounted(() => { 
+    timer = setInterval(() => scroll('hero-carousel', 'right'), 7000); 
+});
+
 onUnmounted(() => clearInterval(timer));
 </script>
 
@@ -146,12 +157,32 @@ onUnmounted(() => clearInterval(timer));
 
                     <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
                         <span class="text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Nexus Exclusive</span>
-                        <h2 class="text-2xl md:text-4xl font-black text-slate-900 mb-4 leading-tight">{{ selectedProduct?.description }}</h2>
-                        <p class="text-indigo-600 text-2xl md:text-3xl font-mono font-black mb-6 md:mb-8">R$ {{ selectedProduct?.sale_price }}</p>
+                        <h2 class="text-2xl md:text-4xl font-black text-slate-900 mb-2 leading-tight">{{ selectedProduct?.description }}</h2>
                         
-                        <button class="w-full bg-slate-900 text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase flex items-center justify-center gap-3 hover:bg-indigo-600 transition shadow-xl">
-                            <ShoppingBag /> Adicionar à Sacola
-                        </button>
+                        <Link 
+                            v-if="selectedProduct?.seo?.slug"
+                            :href="route('store.product', selectedProduct.seo.slug)"
+                            class="flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition mb-6 uppercase tracking-widest group"
+                        >
+                            Ver descrição completa
+                            <ExternalLink class="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </Link>
+
+                        <p class="text-indigo-600 text-2xl md:text-3xl font-mono font-black mb-8">R$ {{ selectedProduct?.sale_price }}</p>
+                        
+                        <div class="space-y-3">
+                            <button class="w-full bg-slate-900 text-white py-4 md:py-5 rounded-xl md:rounded-2xl font-black uppercase flex items-center justify-center gap-3 hover:bg-indigo-600 transition shadow-xl">
+                                <ShoppingBag /> Adicionar à Sacola
+                            </button>
+
+                            <Link 
+                                v-if="selectedProduct?.seo?.slug"
+                                :href="route('store.product', selectedProduct.seo.slug)"
+                                class="w-full bg-slate-50 text-slate-600 py-3 rounded-xl font-bold uppercase text-[10px] flex items-center justify-center gap-2 hover:bg-slate-100 transition"
+                            >
+                                Ficha Técnica & Detalhes
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
