@@ -45,6 +45,15 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset');
     Route::patch('/users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
 
+    // Clientes
+    Route::resource('clients', ClientController::class);
+    
+    // Vendas
+    Route::resource('sales', SaleController::class);
+
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::post('/messages/send', [MessageController::class, 'send'])->name('messages.send');
+
     // 4. ÁREA DO SUPER-ADMIN (Protegido por login + middleware de Admin)
     Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {        
         //por hora vou permitir acesso para testes
