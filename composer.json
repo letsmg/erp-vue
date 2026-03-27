@@ -9,6 +9,7 @@
     ],
     "license": "MIT",
     "require": {
+        "barryvdh/laravel-dompdf": "^3.1",
         "php": "^8.2",
         "fakerphp/faker": "*",
         "google/cloud-vision": "*",
