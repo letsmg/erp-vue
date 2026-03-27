@@ -11,7 +11,7 @@ const user = computed(() => page.props.auth.user);
 
 // --- Controle de UI ---
 const isMobileMenuOpen = ref(false);
-const showReportsMenu = ref(false);
+const showReportsMenu = ref(page.url.startsWith('/reports'));
 const toggleMobileMenu = () => isMobileMenuOpen.value = !isMobileMenuOpen.value;
 
 // --- Lógica de Notificações (Toast) ---
@@ -126,7 +126,13 @@ watch(() => page.url, () => isMobileMenuOpen.value = false);
                         enter-active-class="transition duration-200 ease-out" enter-from-class="transform -translate-y-2 opacity-0" enter-to-class="transform translate-y-0 opacity-100"
                         leave-active-class="transition duration-150 ease-in" leave-from-class="transform translate-y-0 opacity-100" leave-to-class="transform -translate-y-2 opacity-0">
                         <div v-if="showReportsMenu" class="ml-11 mt-1 space-y-1">
-                            <Link :href="route('reports.products')" class="block p-2 text-sm text-indigo-400 hover:text-white transition-colors">Produtos</Link>
+                            <Link
+                                :href="route('reports.index')"
+                                :class="[isUrl('/reports') ? 'text-white font-semibold' : 'text-indigo-400']"
+                                class="block p-2 text-sm hover:text-white transition-colors"
+                            >
+                                Produtos
+                            </Link>
                             <span class="block p-2 text-sm text-indigo-800 cursor-not-allowed italic">Vendas</span>
                         </div>
                     </Transition>
