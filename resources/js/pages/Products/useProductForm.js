@@ -116,6 +116,13 @@ export function useProductForm(props) {
     // Função de preenchimento para uso externo/atalho
     const fillTestForm = () => fillFormData(form, props.suppliers);
 
+    // Função de limpeza para uso externo/atalho
+    const clearCurrentForm = () => {
+        clearFormData(form);
+        imagePreviews.value = [];
+        tagInput.value = '';
+    };
+
     onMounted(() => window.addEventListener('keydown', handleKeydown));
     onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 
@@ -169,7 +176,8 @@ export function useProductForm(props) {
         removeImage, 
         onDragEnd, 
         profitData, 
-        fillTestForm, 
+        fillTestForm,
+        clearCurrentForm,
         submit
     };
 }

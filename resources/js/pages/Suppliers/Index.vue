@@ -36,7 +36,7 @@ const toggleStatus = (supplier) => {
                 <p class="mt-1 text-sm text-gray-500">Gestão de parceiros e origens de suprimentos.</p>
             </div>
             <div class="mt-4 sm:mt-0">
-                <Link :href="route('suppliers.create')" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition shadow-md">
+                <Link :href="route('suppliers.create')" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-xl font-bold uppercase text-xs tracking-widest cursor-pointer">
                     <Plus class="w-4 h-4 mr-2" /> Novo Fornecedor
                 </Link>
             </div>

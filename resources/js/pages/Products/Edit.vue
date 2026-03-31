@@ -226,7 +226,7 @@ const dragOptions = {
                 </div>
 
                 <div class="flex items-center justify-end gap-6 border-t border-gray-100 pt-8">
-                    <button type="submit" :disabled="form.processing" class="bg-black text-white px-12 py-5 rounded-3xl font-black uppercase text-[10px] tracking-[0.3em] shadow-2xl hover:bg-indigo-600 transition-all flex items-center gap-3">
+                    <button type="submit" :disabled="form.processing" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 active:shadow-lg text-white px-12 py-5 rounded-3xl font-black uppercase text-[10px] tracking-[0.3em] shadow-2xl shadow-emerald-500/20 hover:shadow-xl transition-all duration-200 flex items-center gap-3 disabled:opacity-50 disabled:scale-100 transform cursor-pointer">
                         <Save class="w-4 h-4" />
                         {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
                     </button>

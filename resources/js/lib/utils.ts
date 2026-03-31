@@ -64,7 +64,9 @@ export const fillFormData = (form: any, suppliers: any[] = []) => {
             return `${nomes[Math.floor(Math.random()*nomes.length)]} ${sobrenomes[Math.floor(Math.random()*sobrenomes.length)]}`;
         },
         company_name: () => "Empresa Teste " + Math.random().toString(36).substring(7).toUpperCase(),
-        email: () => `teste_${Math.random().toString(36).substring(5)}@vue laravel.com`,        
+        email: () => `teste_${Math.random().toString(36).substring(5)}@vuelaravel.com`,
+        password: () => "Mudar@123",
+        password_confirmation: () => "Mudar@123",        
         cnpj: () => "42.123.456/0001-99",
         state_registration: () => "ISENTO",
         zip_code: () => "01001-000",

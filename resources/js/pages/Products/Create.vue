@@ -6,7 +6,7 @@ import draggable from 'vuedraggable';
 import { useProductForm } from './useProductForm'; 
 import { 
     Save, ArrowLeft, DollarSign, Camera, X, Move,
-    Search, Code, FileText, Truck, Sparkles
+    Search, Code, FileText, Truck, Sparkles, X as ClearIcon
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -17,7 +17,7 @@ const props = defineProps({
 const { 
     form, activeTab, imagePreviews, tagInput,
     addTag, removeTag, handleImageUpload, removeImage, 
-    onDragEnd, profitData, submit, fillTestForm 
+    onDragEnd, profitData, submit, fillTestForm, clearCurrentForm 
 } = useProductForm(props);
 
 const handleShortcut = (e) => {
@@ -43,10 +43,36 @@ onUnmounted(() => window.removeEventListener('keydown', handleShortcut));
                     </Link>
                     <div class="flex items-center gap-4">
                         <h2 class="text-3xl font-black text-gray-800 tracking-tighter uppercase">Novo Produto</h2>
-                        <span class="hidden md:flex items-center gap-1 text-[9px] font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full uppercase tracking-widest">
-                            <Sparkles class="w-3 h-3" /> CTRL + SHIFT + P
-                        </span>
                     </div>
+                </div>
+                
+                <!-- Atalhos -->
+                <div class="mb-6 flex justify-center">
+                    <div class="inline-flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-gray-200 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <Sparkles class="w-4 h-4 text-indigo-500" />
+                            <span class="text-[11px] font-bold text-indigo-600">CTRL+ALT+1</span>
+                            <span class="text-[11px] text-gray-600">Popular</span>
+                        </div>
+                        <div class="w-px h-4 bg-gray-300"></div>
+                        <div class="flex items-center gap-2">
+                            <ClearIcon class="w-4 h-4 text-red-500" />
+                            <span class="text-[11px] font-bold text-red-600">CTRL+ALT+2</span>
+                            <span class="text-[11px] text-gray-600">Limpar</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="mb-6 flex justify-center gap-4">
+                    <button type="button" @click="fillTestForm" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                        <Sparkles class="w-4 h-4" />
+                        Popular Formulário
+                    </button>
+                    <button type="button" @click="clearCurrentForm" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                        <ClearIcon class="w-4 h-4" />
+                        Limpar Formulário
+                    </button>
                 </div>
                 
                 <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
@@ -254,18 +280,4 @@ onUnmounted(() => window.removeEventListener('keydown', handleShortcut));
                             <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Subítulo (H2)</label><input v-model="form.h2" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" /></div>
                             <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Descrição Secundária / Detalhes (Text 2)</label><textarea v-model="form.text2" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold"></textarea></div>
                         </div>
-                        <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Dados Estruturados (Schema JSON-LD)</label><textarea v-model="form.schema_markup" rows="2" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-mono text-[10px]"></textarea></div>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-end gap-6 border-t border-gray-100 pt-8">
-                    <button type="submit" :disabled="form.processing" class="bg-black text-white px-12 py-5 rounded-3xl font-black uppercase text-[10px] tracking-[0.3em] shadow-2xl hover:bg-indigo-600 transition-all flex items-center gap-3 disabled:opacity-50">
-                        <Save v-if="!form.processing" class="w-4 h-4" />
-                        <span v-else class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                        {{ form.processing ? 'Processando' : 'Salvar Produto' }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </AuthenticatedLayout>
 </template>

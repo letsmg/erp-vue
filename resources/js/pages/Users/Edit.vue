@@ -155,9 +155,9 @@ const submit = () => {
                     <button 
                         type="submit" 
                         :disabled="form.processing" 
-                        class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                        class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 active:shadow-lg text-white px-10 py-3 rounded-xl font-bold flex items-center gap-2 transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-xl disabled:opacity-50 disabled:scale-100 transform cursor-pointer"
                     >
-                        <Save class="w-5 h-5" /> {{ form.processing ? 'Salvando...' : 'Atualizar Dados' }}
+                        <Save class="w-5 h-5" /> {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
                     </button>
                 </div>
             </form>

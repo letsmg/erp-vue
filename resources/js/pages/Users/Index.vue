@@ -38,7 +38,7 @@ const handleDelete = (user) => {
                 <p class="mt-1 text-sm text-gray-500">Lista de colaboradores com acesso ao ERP Vue Laravel.</p>
             </div>
             <div class="mt-4 sm:mt-0">
-                <Link v-if="auth.user.access_level === 1" :href="route('users.create')" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition cursor-pointer">
+                <Link v-if="auth.user.access_level === 1" :href="route('users.create')" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-xl font-bold uppercase text-xs tracking-widest cursor-pointer">
                     <UserPlus class="w-4 h-4 mr-2" />
                     Novo Usuário
                 </Link>

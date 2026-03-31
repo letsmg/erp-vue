@@ -45,9 +45,13 @@ watch(errors, (newErrors) => {
 
 // --- Atalhos e Utilitários ---
 const handleKeyDown = (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'p') {
+    if (e.ctrlKey && e.altKey && e.key === '1') {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent('magic-fill'));
+    }
+    if (e.ctrlKey && e.altKey && e.key === '2') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('magic-clear'));
     }
 };
 

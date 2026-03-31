@@ -112,7 +112,7 @@ const destroy = (id) => {
 
                     <Link 
                         :href="route('products.create')" 
-                        class="bg-black text-white px-6 py-3 rounded-2xl flex items-center gap-2 hover:bg-indigo-600 transition-all shadow-lg font-bold uppercase text-xs tracking-widest"
+                        class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-2xl flex items-center gap-2 transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-xl font-bold uppercase text-xs tracking-widest cursor-pointer"
                     >
                         <PackagePlus class="w-5 h-5" />
                         Novo Produto
@@ -219,9 +219,9 @@ const destroy = (id) => {
                         :href="link.url || '#'"
                         v-html="link.label"
                         :class="[
-                            'px-4 py-2 text-xs font-bold rounded-lg transition-all',
-                            link.active ? 'bg-black text-white' : 'bg-white text-gray-500 hover:bg-gray-100',
-                            !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                            'px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer',
+                            link.active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-white text-gray-500 hover:bg-emerald-50 hover:text-emerald-600',
+                            !link.url ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 active:shadow-lg'
                         ]"
                     />
                 </div>
