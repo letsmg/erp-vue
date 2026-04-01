@@ -44,7 +44,7 @@ jobs:
             echo "📦 Dependências e Build..."
             composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
             npm install --quiet
-            npm run build
+            timeout 10m npm run build || (echo "❌ Build timeout - tentando novamente..." && timeout 15m npm run build)
 
             echo "🧹 Otimização Laravel..."
             php artisan optimize:clear            
