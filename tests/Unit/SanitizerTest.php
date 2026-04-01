@@ -56,7 +56,7 @@ class SanitizerTest extends TestCase
             'h1' => '<h1>Heading</h1>',
         ];
 
-        $sanitized = SanitizerHelper::sanitize($seoData, ['schema_markup', 'google_tag_manager']);
+        $sanitized = SanitizerHelper::sanitizeSeoData($seoData);
 
         $this->assertEquals('Meta Title', $sanitized['meta_title']);
         $this->assertEquals('Description with HTML', $sanitized['meta_description']);
@@ -73,7 +73,7 @@ class SanitizerTest extends TestCase
                 'name' => '  John  ',
                 'bio' => '<p>Bio with <b>formatting</b></p>',
             ],
-            'tags' => ['tag1', '  tag2  ', 'tag3'],
+            'tags' => ['tag1', '  tag2  ', '<tag3>'],
         ];
 
         $sanitized = SanitizerHelper::sanitize($data);

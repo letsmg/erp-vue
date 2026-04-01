@@ -15,6 +15,12 @@ use App\Policies\UserPolicy;
 use App\Models\Product;
 use App\Policies\ProductPolicy;
 
+use App\Models\Client;
+use App\Policies\ClientPolicy;
+
+use App\Models\ShoppingCart;
+use App\Policies\ShoppingCartPolicy;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -29,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         // 🔐 Policies registradas explicitamente
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Client::class, ClientPolicy::class);
+        Gate::policy(ShoppingCart::class, ShoppingCartPolicy::class);
     }
 
     protected function configureDefaults(): void

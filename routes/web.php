@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ClientAuthController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController; // ✅ ADICIONADO
@@ -47,6 +49,21 @@ Route::middleware('guest')->group(function () {
 
     Route::post('/forgot-password', [LoginController::class, 'sendResetLinkEmail'])
         ->name('password.email');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 2.1. CLIENT AUTH (GUEST)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('guest')->prefix('cliente')->name('client.')->group(function () {
+    Route::get('/login', [ClientAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [ClientAuthController::class, 'login'])->name('login.post');
+    Route::get('/registrar', [ClientAuthController::class, 'showRegister'])->name('register');
+    Route::post('/registrar', [ClientAuthController::class, 'register'])->name('register.post');
+    Route::get('/esqueci-senha', [ClientAuthController::class, 'showForgotPassword'])->name('forgot.password');
+    Route::post('/esqueci-senha', [ClientAuthController::class, 'sendResetLinkEmail'])->name('forgot.password.post');
 });
 
 /*
@@ -124,6 +141,18 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | CLIENTS (ADMIN)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::resource('clients', ClientController::class);
+    Route::get('/clients/{client}/toggle-status', [ClientController::class, 'toggleStatus'])->name('clients.toggle.status');
+    Route::post('/clients/validate-document', [ClientController::class, 'validateDocument'])->name('clients.validate.document');
+    Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
+    Route::get('/clients/export', [ClientController::class, 'export'])->name('clients.export');
+
+    /*
+    |--------------------------------------------------------------------------
     | SUPER ADMIN
     |--------------------------------------------------------------------------
     */
@@ -131,4 +160,17 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
         // rotas exclusivas
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| 4. CLIENT AREA (AUTH)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'client'])->prefix('cliente')->name('client.')->group(function () {
+    Route::get('/dashboard', fn () => Inertia::render('Client/Dashboard'))->name('dashboard');
+    Route::get('/meus-dados', [ClientController::class, 'showClientData'])->name('profile');
+    Route::put('/meus-dados', [ClientController::class, 'updateClientData'])->name('profile.update');
+    Route::post('/logout', [ClientAuthController::class, 'logout'])->name('logout');
 });

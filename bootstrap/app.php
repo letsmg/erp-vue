@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SanitizeInput;
+use App\Http\Middleware\ClientMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             SanitizeInput::class,
+        ]);
+
+        // Registra middleware de cliente
+        $middleware->alias([
+            'client' => ClientMiddleware::class,
         ]);
 
         // Redireciona usuários não autenticados que tentarem acessar rotas protegidas

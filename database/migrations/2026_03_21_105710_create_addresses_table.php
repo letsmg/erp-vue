@@ -22,6 +22,10 @@ return new class extends Migration
             $table->string('city');
             $table->char('state', 2);
             $table->string('complement')->nullable();
+            
+            // Identifica se este é o endereço principal de entrega
+            $table->boolean('is_delivery_address')->default(false);
+            
             $table->timestamps();
         });
     }

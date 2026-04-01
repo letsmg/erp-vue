@@ -9,12 +9,23 @@ class SanitizerHelper
      * com exceção dos campos especificados.
      * 
      * @param array $data Dados a serem sanitizados
-     * @param array $except Campos que não devem ser sanitizados (ex: ['schema_markup', 'google_tag_manager'])
+     * @param array $except Campos que não devem ser sanitizados
      * @return array
      */
     public static function sanitize(array $data, array $except = []): array
     {
         return self::sanitizeArray($data, $except);
+    }
+    
+    /**
+     * Sanitiza dados para a tabela SEO, exceto schema_markup e google_tag_manager
+     * 
+     * @param array $data Dados SEO
+     * @return array
+     */
+    public static function sanitizeSeoData(array $data): array
+    {
+        return self::sanitize($data, ['schema_markup', 'google_tag_manager']);
     }
     
     /**
@@ -51,9 +62,6 @@ class SanitizerHelper
         
         // Remove múltiplos espaços em branco internos
         $cleaned = preg_replace('/\s+/', ' ', $cleaned);
-        
-        // Remove espaços em branco no início e fim novamente (após a substituição)
-        $cleaned = trim($cleaned);
         
         // Remove padrões javascript perigosos que possam ter escapado
         $cleaned = preg_replace('/javascript\s*:/i', '', $cleaned);

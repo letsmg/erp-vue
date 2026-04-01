@@ -52,4 +52,11 @@ class UserFactory extends Factory
             'is_active' => false,
         ]);
     }
+
+    public function client(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'access_level' => 2, // CLIENT
+        ]);
+    }
 }

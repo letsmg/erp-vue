@@ -27,7 +27,7 @@ class SimpleSanitizationTest extends TestCase
         $sanitized = \App\Helpers\SanitizerHelper::sanitize($data, ['schema_markup', 'google_tag_manager']);
 
         // Verifica se os campos foram sanitizados
-        $this->assertEquals('Test User', trim($sanitized['name']));
+        $this->assertEquals('Test User', $sanitized['name']);
         $this->assertEquals('Description with HTML', $sanitized['description']);
         $this->assertEquals('Meta Title', $sanitized['meta_title']);
         
@@ -48,7 +48,7 @@ class SimpleSanitizationTest extends TestCase
             'text1' => '<em>Text</em> content',
         ];
 
-        $sanitized = \App\Helpers\SanitizerHelper::sanitize($seoData, ['schema_markup', 'google_tag_manager']);
+        $sanitized = \App\Helpers\SanitizerHelper::sanitizeSeoData($seoData);
 
         // Verifica se os campos foram sanitizados
         $this->assertEquals('Meta Title', $sanitized['meta_title']);
