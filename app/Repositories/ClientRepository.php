@@ -16,17 +16,31 @@ class ClientRepository
         $query = Client::with(['user', 'addresses'])
             ->orderBy('name');
 
-        // Filtro por nome
+        // Filtro por nome (Mínimo 4 caracteres conforme solicitado)
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
-            $query->where(function ($q) use ($search) {
-                $searchTerm = "%{$search}%";
-                $q->where('name', 'like', $searchTerm)
-                  ->orWhere('document_number', 'like', $searchTerm)
-                  ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
-                      $userQuery->where('email', 'like', $searchTerm);
-                  });
-            });
+            
+            if (strlen($search) >= 4) {
+                $query->where(function ($q) use ($search) {
+                    $searchTerm = "%{$search}%";
+                    // Usando ILIKE para busca insensível a maiúsculas/minúsculas (PostgreSQL)
+                    $q->where('name', 'ilike', $searchTerm)
+                      ->orWhere('document_number', 'like', $searchTerm)
+                      ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                          $userQuery->where('email', 'ilike', $searchTerm);
+                      });
+                });
+            }
+        }
+
+        // Filtro por status ativo
+        if (!empty($filters['active'])) {
+            $query->where('is_active', true);
+        }
+
+        // Filtro por status bloqueado
+        if (!empty($filters['blocked'])) {
+            $query->where('is_active', false);
         }
 
         // Filtro por tipo de documento
@@ -34,8 +48,8 @@ class ClientRepository
             $query->where('document_type', $filters['document_type']);
         }
 
-        // Filtro por status
-        if (isset($filters['is_active'])) {
+        // Filtro por status (legado, mantido para compatibilidade se necessário)
+        if (isset($filters['is_active']) && empty($filters['active']) && empty($filters['blocked'])) {
             $query->where('is_active', $filters['is_active']);
         }
 

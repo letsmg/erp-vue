@@ -1,28 +1,93 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { FileText, Printer, FileSearch, Truck } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import { FileText, Printer, FileSearch, Truck, Users, CheckSquare, Square } from 'lucide-vue-next';
 
 // Recebe os fornecedores do ReportController
 const props = defineProps({
     suppliers: Array
 });
 
-// Estado do formulário local
-const form = ref({
+// Estado do formulário de Produtos
+const productForm = ref({
     type: 'sintetico',
     supplier_id: ''
 });
 
-// Função que monta a URL e abre o PDF
-const generateReport = () => {
+// Estado do formulário de Clientes
+const clientForm = ref({
+    document_type: '',
+    status: '',
+    fields: ['name', 'document_number', 'email'] // IDs dos campos
+});
+
+// Grupos de campos com labels em Português
+const fieldGroups = {
+    personal: { 
+        label: 'Dados Pessoais', 
+        fields: [
+            { id: 'name', label: 'Nome Completo' },
+            { id: 'document_number', label: 'CPF/CNPJ' },
+            { id: 'email', label: 'E-mail' },
+            { id: 'phone1', label: 'Telefone' }
+        ] 
+    },
+    address: { 
+        label: 'Endereço', 
+        fields: [
+            { id: 'zip_code', label: 'CEP' },
+            { id: 'street', label: 'Logradouro' },
+            { id: 'number', label: 'Número' },
+            { id: 'neighborhood', label: 'Bairro' },
+            { id: 'city', label: 'Cidade' },
+            { id: 'state', label: 'UF' }
+        ] 
+    },
+    billing: { 
+        label: 'Faturamento/Compras', 
+        fields: [
+            { id: 'total_purchases', label: 'Total Comprado' },
+            { id: 'last_purchase_date', label: 'Última Compra' }
+        ] 
+    }
+};
+
+// Toggle grupo
+const toggleGroup = (groupKey) => {
+    const groupFieldIds = fieldGroups[groupKey].fields.map(f => f.id);
+    const allPresent = groupFieldIds.every(id => clientForm.value.fields.includes(id));
+    
+    if (allPresent) {
+        clientForm.value.fields = clientForm.value.fields.filter(id => !groupFieldIds.includes(id));
+    } else {
+        const uniqueFields = new Set([...clientForm.value.fields, ...groupFieldIds]);
+        clientForm.value.fields = Array.from(uniqueFields);
+    }
+};
+
+const isGroupSelected = (groupKey) => {
+    return fieldGroups[groupKey].fields.every(f => clientForm.value.fields.includes(f.id));
+};
+
+// Função que monta a URL e abre o PDF de Produtos
+const generateProductReport = () => {
     const params = new URLSearchParams({
-        type: form.value.type,
-        supplier_id: form.value.supplier_id
+        type: productForm.value.type,
+        supplier_id: productForm.value.supplier_id
     }).toString();
     
     window.open(route('reports.products') + '?' + params, '_blank');
+};
+
+// Função que monta a URL e abre o PDF de Clientes
+const generateClientReport = () => {
+    const params = new URLSearchParams();
+    params.append('document_type', clientForm.value.document_type);
+    params.append('status', clientForm.value.status);
+    clientForm.value.fields.forEach(f => params.append('fields[]', f));
+    
+    window.open(route('reports.clients') + '?' + params.toString(), '_blank');
 };
 </script>
 
@@ -30,113 +95,118 @@ const generateReport = () => {
     <Head title="Relatórios" />
 
     <AuthenticatedLayout>
-        <div class="max-w-5xl mx-auto py-8 px-4">
+        <div class="max-w-7xl mx-auto py-8 px-4">
             <div class="mb-10">
-                <h2 class="text-3xl font-black text-slate-900 tracking-tight">Centro de Relatórios</h2>
-                <p class="text-slate-500 font-medium mt-1">Gere documentos PDF detalhados do seu inventário de produtos.</p>
+                <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Centro de Relatórios</h2>
+                <p class="text-slate-500 font-medium mt-1 uppercase text-xs tracking-widest">Gere documentos PDF detalhados do seu sistema.</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                        <div class="space-y-8">
-                            
-                            <div>
-                                <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">
-                                    1. Escolha o Formato
-                                </label>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <button 
-                                        @click="form.type = 'sintetico'"
-                                        :class="form.type === 'sintetico' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'"
-                                        class="flex items-center gap-4 p-6 rounded-2xl font-bold transition-all border-2 border-transparent cursor-pointer"
-                                    >
-                                        <div class="p-3 rounded-xl bg-white/20">
-                                            <FileText class="w-6 h-6" />
-                                        </div>
-                                        <div class="text-left">
-                                            <span class="block text-lg">Sintético</span>
-                                            <span class="text-xs opacity-70 font-medium">Lista simplificada</span>
-                                        </div>
-                                    </button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Relatório de Produtos -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
+                            <Truck class="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Produtos</h3>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Inventário e Fornecedores</p>
+                        </div>
+                    </div>
 
-                                    <button 
-                                        @click="form.type = 'analitico'"
-                                        :class="form.type === 'analitico' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'"
-                                        class="flex items-center gap-4 p-6 rounded-2xl font-bold transition-all border-2 border-transparent cursor-pointer"
-                                    >
-                                        <div class="p-3 rounded-xl bg-white/20">
-                                            <FileSearch class="w-6 h-6" />
-                                        </div>
-                                        <div class="text-left">
-                                            <span class="block text-lg">Analítico</span>
-                                            <span class="text-xs opacity-70 font-medium">Completo com fotos</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">
-                                    2. Filtro de Fornecedor
-                                </label>
-                                <div class="relative flex items-center">
-                                    <div class="absolute left-4 pointer-events-none">
-                                        <Truck class="w-5 h-5 text-indigo-500" />
-                                    </div>
-                                    
-                                    <select 
-                                        v-model="form.supplier_id"
-                                        class="w-full pl-12 pr-10 py-5 bg-slate-50 border-2 border-transparent focus:border-indigo-500 rounded-2xl font-bold text-slate-700 focus:ring-0 transition-all appearance-none cursor-pointer"
-                                    >
-                                        <option value="">Todos os Fornecedores</option>
-                                        <option v-for="s in suppliers" :key="s.id" :value="s.id">
-                                            {{ s.company_name }}
-                                        </option>
-                                    </select>
-
-                                    <div class="absolute right-4 pointer-events-none text-slate-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-4">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Tipo de Relatório</label>
+                            <div class="grid grid-cols-2 gap-4">
                                 <button 
-                                    @click="generateReport"
-                                    style="background-color: #0f172a !important; color: white !important;"
-                                    class="w-full p-6 rounded-2xl font-black flex items-center justify-center gap-4 transition-all shadow-2xl active:scale-[0.98] cursor-pointer"
+                                    @click="productForm.type = 'sintetico'"
+                                    :class="productForm.type === 'sintetico' ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'"
+                                    class="p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
                                 >
-                                    <Printer class="w-6 h-6" style="color: white !important;" />
-                                    <span style="color: white !important;">GERAR DOCUMENTO PDF</span>
+                                    Sintético
+                                </button>
+                                <button 
+                                    @click="productForm.type = 'analitico'"
+                                    :class="productForm.type === 'analitico' ? 'bg-slate-900 text-white shadow-xl shadow-slate-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'"
+                                    class="p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all"
+                                >
+                                    Analítico
                                 </button>
                             </div>
                         </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Filtrar por Fornecedor</label>
+                            <select v-model="productForm.supplier_id" class="w-full bg-slate-50 border-transparent rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none appearance-none">
+                                <option value="">Todos os Fornecedores</option>
+                                <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.company_name }}</option>
+                            </select>
+                        </div>
+
+                        <button @click="generateProductReport" class="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-3 group mt-4">
+                            <Printer class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            GERAR PDF DE PRODUTOS
+                        </button>
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    <div class="bg-indigo-900 p-8 rounded-[32px] text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h3 class="font-black text-xl mb-6">Dicas de Impressão</h3>
-                            <ul class="space-y-6">
-                                <li class="flex gap-4">
-                                    <div class="bg-indigo-500/30 p-2 rounded-lg h-fit text-indigo-200 font-bold">01</div>
-                                    <p class="text-sm text-indigo-100 leading-relaxed">O relatório <strong>Sintético</strong> é otimizado para economizar papel e tinta.</p>
-                                </li>
-                                <li class="flex gap-4">
-                                    <div class="bg-indigo-500/30 p-2 rounded-lg h-fit text-indigo-200 font-bold">02</div>
-                                    <p class="text-sm text-indigo-100 leading-relaxed">O modo <strong>Analítico</strong> gera uma página em modo paisagem para acomodar as imagens e detalhes extras.</p>
-                                </li>
-                                <li class="flex gap-4">
-                                    <div class="bg-indigo-500/30 p-2 rounded-lg h-fit text-indigo-200 font-bold">03</div>
-                                    <p class="text-sm text-indigo-100 leading-relaxed">Certifique-se que o bloqueador de pop-ups permite a abertura da nova aba.</p>
-                                </li>
-                            </ul>
+                <!-- Relatório de Clientes -->
+                <div class="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl">
+                            <Users class="w-6 h-6" />
                         </div>
-                        <div class="absolute -right-10 -bottom-10 opacity-10">
-                            <FileText class="w-40 h-40" />
+                        <div>
+                            <h3 class="text-xl font-black text-slate-900 uppercase tracking-tighter">Clientes</h3>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Base de Dados e Perfil</p>
                         </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Tipo Pessoa</label>
+                                <select v-model="clientForm.document_type" class="w-full bg-slate-50 border-transparent rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-emerald-500 transition-all outline-none">
+                                    <option value="">Todos</option>
+                                    <option value="CPF">Física (CPF)</option>
+                                    <option value="CNPJ">Jurídica (CNPJ)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Status</label>
+                                <select v-model="clientForm.status" class="w-full bg-slate-50 border-transparent rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-emerald-500 transition-all outline-none">
+                                    <option value="">Todos</option>
+                                    <option value="1">Ativos</option>
+                                    <option value="0">Bloqueados</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 ml-1">Campos para Exibição</label>
+                            
+                            <div class="space-y-4">
+                                <div v-for="(group, key) in fieldGroups" :key="key" class="border border-slate-100 rounded-2xl p-4 bg-slate-50/50">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-700">{{ group.label }}</span>
+                                        <button @click="toggleGroup(key)" class="text-[9px] font-black uppercase text-emerald-600 hover:underline">
+                                            {{ isGroupSelected(key) ? 'Desmarcar Grupo' : 'Marcar Grupo' }}
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label v-for="field in group.fields" :key="field.id" class="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox" v-model="clientForm.fields" :value="field.id" class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                                            <span class="text-[10px] font-bold uppercase tracking-tight text-slate-500 group-hover:text-slate-900 transition-colors">{{ field.label }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button @click="generateClientReport" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 group mt-4 transition-all shadow-lg shadow-emerald-200">
+                            <Printer class="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            GERAR PDF DE CLIENTES
+                        </button>
                     </div>
                 </div>
             </div>

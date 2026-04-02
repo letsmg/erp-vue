@@ -24,7 +24,24 @@
     </style>
 </head>
 <body>
+    @php
+        $logoPath = public_path('icon.ico');
+        $base64Logo = '';
+        if (file_exists($logoPath)) {
+            $logoData = file_get_contents($logoPath);
+            $base64Logo = 'data:image/x-icon;base64,' . base64_encode($logoData);
+        }
+    @endphp
+
     <div class="header">
+        <div style="margin-bottom: 15px;">
+            @if($base64Logo)
+                <img src="{{ $base64Logo }}" style="height: 30px; vertical-align: middle; margin-right: 10px;">
+            @endif
+            <span style="font-size: 24px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -1px; vertical-align: middle;">
+                ERP<span style="color: #4f46e5;">VUE LARAVEL</span>
+            </span>
+        </div>
         <h1>{{ $title }}</h1>
         <p>Relatório gerado em: {{ $date }}</p>
     </div>

@@ -140,6 +140,13 @@ watch(() => page.url, () => isMobileMenuOpen.value = false);
                             >
                                 Produtos
                             </Link>
+                            <Link
+                                :href="route('reports.index')"
+                                :class="[isUrl('/reports') ? 'text-white font-semibold' : 'text-indigo-400']"
+                                class="block p-2 text-sm hover:text-white transition-colors"
+                            >
+                                Clientes
+                            </Link>
                             <span class="block p-2 text-sm text-indigo-800 cursor-not-allowed italic">Vendas</span>
                         </div>
                     </Transition>

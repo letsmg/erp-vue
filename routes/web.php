@@ -124,6 +124,7 @@ Route::middleware(['auth', 'staff'])->group(function () {
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/products', [ReportController::class, 'products'])->name('reports.products');
+    Route::get('/reports/clients', [ReportController::class, 'clients'])->name('reports.clients');
 
     /*
     |--------------------------------------------------------------------------

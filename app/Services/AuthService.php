@@ -69,9 +69,11 @@ class AuthService
             return false;
         }
 
-        // 🚫 3. Verifica se está ativo
+        // 🚫 3. Verifica se o usuário está ativo (PADRÃO PARA TODOS)
         if (!$user->is_active) {
-            return false;
+            throw ValidationException::withMessages([
+                'email' => ['Sua conta está bloqueada. Entre em contato com a administração para reativá-la.'],
+            ]);
         }
 
         // 🔥 4. VALIDAÇÃO DE PERFIL POR PORTAL

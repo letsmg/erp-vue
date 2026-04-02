@@ -27,7 +27,7 @@ class ClientController extends Controller
     {
         $this->authorize('viewAny', Client::class);
 
-        $filters = $request->only(['search', 'document_type', 'is_active', 'contributor_type']);
+        $filters = $request->only(['search', 'document_type', 'is_active', 'contributor_type', 'active', 'blocked']);
         $clients = $this->repository->getFiltered($filters);
 
         return Inertia::render('Clients/Index', [

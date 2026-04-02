@@ -16,12 +16,39 @@ const props = defineProps({
 });
 
 const search = ref(props.filters.search || '');
+const showOnlyActive = ref(props.filters.active == 1);
+const showOnlyBlocked = ref(props.filters.blocked == 1);
 
-const handleSearch = debounce(() => {
-    router.get(route('clients.index'), { search: search.value }, { preserveState: true, replace: true });
-}, 500);
+const updateFilters = debounce(() => {
+    router.get(route('clients.index'), 
+        { 
+            search: search.value, 
+            active: showOnlyActive.value ? 1 : 0,
+            blocked: showOnlyBlocked.value ? 1 : 0
+        }, 
+        { 
+            preserveState: true, 
+            replace: true,
+            preserveScroll: true 
+        }
+    );
+}, 300);
 
-watch(search, () => handleSearch());
+watch(search, (value) => {
+    if (value.length >= 4 || value.length === 0) {
+        updateFilters();
+    }
+});
+
+watch(showOnlyActive, (value) => {
+    if (value) showOnlyBlocked.value = false;
+    updateFilters();
+});
+
+watch(showOnlyBlocked, (value) => {
+    if (value) showOnlyActive.value = false;
+    updateFilters();
+});
 
 const handleToggleStatus = (client) => {
     const acao = client.is_active ? 'bloquear' : 'ativar';
@@ -57,8 +84,8 @@ const getStatusColor = (isActive) => isActive ? 'text-emerald-700 bg-emerald-50 
         </div>
 
         <!-- Filtros Rápidos -->
-        <div class="mb-6 flex flex-col sm:flex-row gap-4">
-            <div class="relative flex-1">
+        <div class="mb-6 flex flex-col sm:flex-row gap-4 items-center">
+            <div class="relative flex-1 w-full">
                 <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                     v-model="search"
@@ -67,6 +94,20 @@ const getStatusColor = (isActive) => isActive ? 'text-emerald-700 bg-emerald-50 
                     class="w-full bg-white border-slate-200 rounded-2xl pl-12 pr-4 py-3 text-sm focus:ring-2 focus:ring-primary transition-all outline-none shadow-sm"
                 />
             </div>
+
+            <!-- Checkboxes de Status -->
+            <div class="flex items-center gap-6 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" v-model="showOnlyActive" class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary transition-all">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-primary transition-colors">Ativos</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" v-model="showOnlyBlocked" class="w-4 h-4 rounded border-slate-300 text-rose-500 focus:ring-rose-500 transition-all">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-rose-500 transition-colors">Bloqueados</span>
+                </label>
+            </div>
+
             <button class="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-2xl flex items-center gap-2 font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all shadow-sm">
                 <Filter class="w-4 h-4" />
                 Filtros Avançados

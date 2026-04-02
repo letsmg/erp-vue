@@ -66,6 +66,14 @@ class ClientAuthController extends Controller
                 ]);
             }
 
+            // Se o cliente (tabela clients) estiver inativo, bloqueia mesmo com user ativo
+            if (!$client->is_active) {
+                auth()->logout();
+                return back()->withErrors([
+                    'email' => 'Sua conta de cliente está bloqueada. Entre em contato com a administração.',
+                ]);
+            }
+
             // Redireciona para dashboard do cliente
             return redirect()->route('client.dashboard');
         }
