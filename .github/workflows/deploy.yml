@@ -20,22 +20,19 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@147.15.80.52 << 'EOF'
             set -e
             
-            echo "🛡️ Configurando exceção de segurança do Git"
-            git config --global --add safe.directory /var/www/erp
-
             cd /var/www/erp
             
             echo "📥 Atualizando código..."
-            sudo chown -R ubuntu:www-data /var/www/erp
             git reset --hard
             git pull origin main
 
             echo "📦 Dependências PHP..."
-            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-progress
+            # Usamos o cache local para ser instantâneo
+            composer install --no-dev --optimize-autoloader --no-interaction --no-progress
             
             echo "📦 Dependências Node..."
-            rm -rf node_modules package-lock.json
-            npm install --legacy-peer-deps
+            # NÃO apague node_modules. O npm install só baixará o que mudou.
+            npm install --no-audit --no-fund
             
             echo "🔨 Build assets..."
             npm run build
@@ -44,18 +41,15 @@ jobs:
             php artisan migrate --force
             
             echo "🧹 Otimização Laravel..."
-            php artisan optimize:clear            
             php artisan optimize
             
-            echo "🔗 Storage link..."
-            rm -rf public/storage && php artisan storage:link            
-
-            echo "🔐 Permissões..."
-            sudo chown -R www-data:www-data /var/www/erp
+            echo "🔐 Permissões cirúrgicas..."
+            # Em vez de chown no projeto todo, focamos no necessário
+            sudo chown -R www-data:www-data storage bootstrap/cache
             sudo chmod -R 775 storage bootstrap/cache
 
             echo "🔄 Reiniciando PHP..."
             sudo systemctl restart php8.3-fpm
             
-            echo "✅ Deploy finalizado com sucesso!"
+            echo "✅ Deploy finalizado!"
           EOF
