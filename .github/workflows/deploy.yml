@@ -35,11 +35,13 @@ jobs:
             echo "📦 Dependências e Build (com trava de memória)..."
             composer install --no-dev --optimize-autoloader --no-interaction --no-progress
             
-            # Otimização: Não apagamos o node_modules para ganhar tempo, 
-            # mas limitamos a RAM do Node para não travar o SSH
+            # Removemos o rm -rf node_modules para usar o cache e salvar CPU/RAM
             npm install --legacy-peer-deps
             
-            export NODE_OPTIONS="--max-old-space-size=1024"
+            # AJUSTE DE SEGURANÇA: Limite de 512MB para não derrubar a instância Free Tier
+            export NODE_OPTIONS="--max-old-space-size=512"
+            
+            echo "🔨 Iniciando Build do Vite..."
             npm run build
 
             echo "🗄️ Resetando Banco (Portfolio Mode)..."
@@ -56,5 +58,5 @@ jobs:
             echo "🔄 Reiniciando PHP..."
             sudo systemctl restart php8.3-fpm
             
-            echo "✅ Deploy finalizado!"
+            echo "✅ Deploy finalizado com sucesso!"
           EOF
