@@ -44,10 +44,9 @@ class StoreProductRequest extends FormRequest
             'free_shipping'   => 'boolean',
             
             // Marketing & SEO
-            'meta_title'        => 'required|string|max:70',
+            // meta_title e h1 são derivados do product->description (usados no frontend)
             'meta_description'  => 'required|string|max:160',
             'meta_keywords'     => 'required|string',            
-            'h1'                => 'required|string',
             'text1'             => 'required|string',
             'h2'                => 'nullable|string',
             'text2'             => 'nullable|string',
@@ -91,7 +90,6 @@ class StoreProductRequest extends FormRequest
             'promo_end_at.after_or_equal' => 'A data de término da promoção deve ser igual ou posterior ao início.',
 
             // SEO
-            'meta_title.max'       => 'O título SEO não deve ultrapassar 70 caracteres.',
             'meta_description.max' => 'A meta descrição não deve ultrapassar 160 caracteres.',
 
             // Imagens

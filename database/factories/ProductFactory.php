@@ -37,12 +37,10 @@ class ProductFactory extends Factory
     public function configure()
     {
         return $this->afterCreating(function (\App\Models\Product $product) {
+            // meta_title e h1 são derivados do product->description
             $product->seo()->create([
-                // Limitamos para 65 para ter uma margem de segurança
-                'meta_title'       => $this->faker->text(65), 
-                'meta_description' => $this->faker->text(160),
+                'meta_description' => "Compre " . $product->description . " com as melhores condições.",
                 'meta_keywords'    => implode(',', $this->faker->words(5)),
-                'h1'               => $this->faker->text(70),
                 'text1'            => $this->faker->paragraph(),
             ]);
         });

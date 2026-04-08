@@ -44,12 +44,10 @@ class UpdateProductRequest extends FormRequest
             'free_shipping'   => 'boolean',
 
             // SEO & Conteúdo (Sincronizado com seu novo Layout)
-            'meta_title'        => 'required|string|max:70',
             'meta_description'  => 'required|string|max:160',
             'meta_keywords'     => 'required|string', 
             'slug'              => 'required|string', // Alterado de url para string para evitar erros de prefixo
            
-            'h1'                => 'required|string',
             'text1'             => 'required|string',
             'h2'                => 'nullable|string',
             'text2'             => 'nullable|string',
@@ -97,7 +95,6 @@ class UpdateProductRequest extends FormRequest
             'promo_end_at.after_or_equal' => 'A data de término da promoção deve ser igual ou posterior ao início.',
 
             // SEO
-            'meta_title.max'       => 'O título SEO não deve ultrapassar 70 caracteres.',
             'meta_description.max' => 'A meta descrição não deve ultrapassar 160 caracteres.',            
 
             // Imagens

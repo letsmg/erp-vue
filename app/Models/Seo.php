@@ -10,8 +10,8 @@ class Seo extends Model
     protected $table = 'seo';
 
     protected $fillable = [
-        'slug', 'meta_title', 'meta_description', 'meta_keywords', 
-        'h1', 'text1', 'h2', 'text2', 
+        'meta_description', 'meta_keywords', 
+        'text1', 'h2', 'text2', 
         'schema_markup', 'google_tag_manager', 
         'seoable_id', 'seoable_type'
     ];
@@ -29,9 +29,14 @@ class Seo extends Model
         return $this->morphTo();
     }
 
+    /**
+     * meta_title é derivado do description do produto (limitado a 70 chars)
+     * Acessado via $product->description no frontend
+     */
     public function getMetaTitleAttribute($value)
     {
-        return htmlspecialchars($value ?: $this->h1, ENT_QUOTES, 'UTF-8');
+        // Retorna vazio - o frontend deve usar product->description limitado a 70 chars
+        return null;
     }
 
     public function getMetaDescriptionAttribute($value)
@@ -53,9 +58,14 @@ class Seo extends Model
         return array_map(fn($kw) => htmlspecialchars(trim($kw), ENT_QUOTES, 'UTF-8'), $keywords);
     }
 
+    /**
+     * h1 é derivado do description do produto
+     * Acessado via $product->description no frontend
+     */
     public function getH1Attribute($value)
     {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        // Retorna vazio - o frontend deve usar product->description
+        return null;
     }
 
     public function getH2Attribute($value)

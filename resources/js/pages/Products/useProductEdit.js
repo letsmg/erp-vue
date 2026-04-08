@@ -46,8 +46,8 @@ export function useProductEdit(props) {
         free_shipping: Boolean(props.product.free_shipping),
 
         // --- SEO & Marketing (Vêm do relacionamento 'seo') ---
+        // meta_title e h1 são derivados do product->description (usados no frontend)
         google_tag_manager: props.product.seo?.google_tag_manager || '',        
-        meta_title: props.product.seo?.meta_title || '',
         meta_description: props.product.seo?.meta_description || '',
         meta_keywords: props.product.seo?.meta_keywords 
             ? (typeof props.product.seo.meta_keywords === 'string' 
@@ -58,7 +58,6 @@ export function useProductEdit(props) {
             : [],
 
         // Conteúdo On-Page
-        h1: props.product.seo?.h1 || '',
         h2: props.product.seo?.h2 || '',
         text1: props.product.seo?.text1 || '',
         text2: props.product.seo?.text2 || '',

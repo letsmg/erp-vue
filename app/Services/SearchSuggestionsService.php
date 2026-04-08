@@ -150,57 +150,128 @@ class SearchSuggestionsService
 
     /**
      * Busca sugestões de descrições de produtos
+     * Retorna o nome/descrição COMPLETO que contém o termo buscado
      */
     private function getProductSuggestions(string $term, int $limit): array
     {
+        $termLower = strtolower($term);
+        
+        // Busca produtos onde a descrição contém o termo (em qualquer parte)
         $products = \App\Models\Product::where('is_active', true)
-            ->where(function ($query) use ($term) {
-                $query->whereRaw("LOWER(description) LIKE LOWER(?)", [$term . '%'])
-                      ->orWhereRaw("LOWER(description) LIKE LOWER(?)", ['% ' . $term . '%']);
+            ->where(function ($query) use ($termLower) {
+                $query->whereRaw("LOWER(description) LIKE LOWER(?)", ['%' . $termLower . '%'])
+                      ->orWhereRaw("LOWER(barcode) LIKE LOWER(?)", ['%' . $termLower . '%']);
             })
-            ->select('description')
+            ->select('description', 'barcode', 'brand', 'model')
             ->distinct()
             ->limit($limit * 2)
             ->get();
         
         $suggestions = [];
+        $addedTerms = []; // Evita duplicados
+        
         foreach ($products as $product) {
-            // Extrai palavras da descrição que começam com o termo
-            $words = $this->extractWordsStartingWith($product->description, $term);
-            foreach ($words as $word) {
-                if (strlen($word) >= 3) {
+            // Prioridade 1: Descrição completa (se contiver o termo)
+            if (!empty($product->description)) {
+                $descLower = strtolower($product->description);
+                if (str_contains($descLower, $termLower)) {
+                    $displayText = $this->formatSuggestionText($product->description, $termLower);
+                    if (!in_array($displayText, $addedTerms) && strlen($displayText) >= 3) {
+                        $suggestions[] = [
+                            'term' => $displayText,
+                            'score' => 3, // Alta prioridade
+                            'type' => 'produto'
+                        ];
+                        $addedTerms[] = $displayText;
+                    }
+                }
+            }
+            
+            // Prioridade 2: Código de barras (se contiver o termo)
+            if (!empty($product->barcode) && str_contains(strtolower($product->barcode), $termLower)) {
+                $displayText = $this->formatSuggestionText($product->barcode, $termLower);
+                if (!in_array($displayText, $addedTerms) && strlen($displayText) >= 3) {
                     $suggestions[] = [
-                        'term' => $word,
-                        'score' => 1,
+                        'term' => $displayText,
+                        'score' => 2,
                         'type' => 'produto'
                     ];
+                    $addedTerms[] = $displayText;
                 }
             }
         }
+        
+        // Ordena por score (prioridade)
+        usort($suggestions, fn($a, $b) => $b['score'] <=> $a['score']);
         
         return array_slice($suggestions, 0, $limit);
     }
 
     /**
+     * Formata o texto da sugestão, truncando se necessário
+     * Destaca onde o termo aparece no texto
+     */
+    private function formatSuggestionText(string $text, string $term): string
+    {
+        $text = trim($text);
+        $termLower = strtolower($term);
+        $textLower = strtolower($text);
+        
+        // Encontra a posição do termo no texto
+        $pos = strpos($textLower, $termLower);
+        
+        if ($pos === false) {
+            // Se não encontrou exato, retorna os primeiros 50 caracteres
+            return strlen($text) > 50 ? substr($text, 0, 50) . '...' : $text;
+        }
+        
+        // Pega contexto ao redor do termo (30 chars antes e depois)
+        $start = max(0, $pos - 30);
+        $length = min(strlen($text) - $start, strlen($term) + 60);
+        
+        $result = substr($text, $start, $length);
+        
+        // Adiciona elipses se necessário
+        if ($start > 0) {
+            $result = '...' . $result;
+        }
+        if ($start + $length < strlen($text)) {
+            $result = $result . '...';
+        }
+        
+        return trim($result);
+    }
+
+    /**
      * Busca sugestões de marcas
+     * Busca em qualquer parte da marca e retorna o nome completo
      */
     private function getBrandSuggestions(string $term, int $limit): array
     {
+        $termLower = strtolower($term);
+        
         $brands = \App\Models\Product::where('is_active', true)
             ->whereNotNull('brand')
-            ->whereRaw("LOWER(brand) LIKE LOWER(?)", [$term . '%'])
+            ->whereRaw("LOWER(brand) LIKE LOWER(?)", ['%' . $termLower . '%'])
             ->select('brand')
             ->distinct()
             ->limit($limit)
             ->get();
         
         $suggestions = [];
+        $addedBrands = [];
+        
         foreach ($brands as $product) {
-            $suggestions[] = [
-                'term' => $product->brand,
-                'score' => 1,
-                'type' => 'marca'
-            ];
+            $brandLower = strtolower($product->brand);
+            // Só adiciona se realmente contém o termo
+            if (str_contains($brandLower, $termLower) && !in_array($product->brand, $addedBrands)) {
+                $suggestions[] = [
+                    'term' => $product->brand,
+                    'score' => 1,
+                    'type' => 'marca'
+                ];
+                $addedBrands[] = $product->brand;
+            }
         }
         
         return $suggestions;
@@ -208,24 +279,34 @@ class SearchSuggestionsService
 
     /**
      * Busca sugestões de modelos
+     * Busca em qualquer parte do modelo e retorna o nome completo
      */
     private function getModelSuggestions(string $term, int $limit): array
     {
+        $termLower = strtolower($term);
+        
         $models = \App\Models\Product::where('is_active', true)
             ->whereNotNull('model')
-            ->whereRaw("LOWER(model) LIKE LOWER(?)", [$term . '%'])
+            ->whereRaw("LOWER(model) LIKE LOWER(?)", ['%' . $termLower . '%'])
             ->select('model')
             ->distinct()
             ->limit($limit)
             ->get();
         
         $suggestions = [];
+        $addedModels = [];
+        
         foreach ($models as $product) {
-            $suggestions[] = [
-                'term' => $product->model,
-                'score' => 1,
-                'type' => 'modelo'
-            ];
+            $modelLower = strtolower($product->model);
+            // Só adiciona se realmente contém o termo
+            if (str_contains($modelLower, $termLower) && !in_array($product->model, $addedModels)) {
+                $suggestions[] = [
+                    'term' => $product->model,
+                    'score' => 1,
+                    'type' => 'modelo'
+                ];
+                $addedModels[] = $product->model;
+            }
         }
         
         return $suggestions;

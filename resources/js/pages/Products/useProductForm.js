@@ -38,11 +38,8 @@ export function useProductForm(props) {
         free_shipping: false,
 
         // Marketing & SEO
-        meta_title: '',
         meta_description: '',
         meta_keywords: [], 
-        slug: '',
-        h1: '',
         h2: '',
         text1: '',
         text2: '',

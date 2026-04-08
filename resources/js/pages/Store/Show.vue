@@ -22,6 +22,18 @@ const page = usePage();
 // 🎯 Dados de SEO
 const seoData = computed(() => props.product.seo || {});
 
+// Helper para limitar meta_title a 70 caracteres (padrão SEO)
+const limitMetaTitle = (text) => {
+    if (!text) return '';
+    return text.length > 70 ? text.substring(0, 67) + '...' : text;
+};
+
+// meta_title derivado do product.description (limitado a 70 chars)
+const metaTitle = computed(() => limitMetaTitle(props.product.description));
+
+// h1 derivado do product.description (sem limite)
+const h1Text = computed(() => props.product.description || '');
+
 // 🖼️ Controle do Carrossel Manual
 const activeImageIndex = ref(0);
 
@@ -75,7 +87,7 @@ const formatCurrency = (value) => {
 
 <template>
     <Head>
-        <title>{{ seoData.meta_title || product.description }}</title>
+        <title>{{ metaTitle }}</title>
         <meta name="description" :content="seoData.meta_description" />
         <meta name="keywords" :content="seoData.meta_keywords" />
         <link rel="slug" :href="seoData.slug_url || page.url" />

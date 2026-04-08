@@ -4,7 +4,7 @@ import {
     Search, ShoppingBag, Cloud, User as UserIcon, 
     Settings, Package, LogOut, ChevronDown 
 } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { debounce } from 'lodash-es';
 
@@ -52,7 +52,7 @@ const fetchSuggestions = debounce(async (term) => {
     }
 
     try {
-        const response = await fetch(`/api/search/suggestions?term=${encodeURIComponent(term)}`);
+        const response = await fetch(`/search/suggestions?term=${encodeURIComponent(term)}`);
         const data = await response.json();
         
         suggestions.value = data.suggestions || [];
@@ -115,12 +115,45 @@ const handleSearch = () => {
 
 // Função para buscar com clique na lupa
 const handleLupaClick = () => {
-    handleSearch();
+    if (searchValue.value.trim()) {
+        // Se tem conteúdo, faz a busca
+        handleSearch();
+    } else {
+        // Se está vazio, limpa a busca e volta para index
+        window.location.href = '/';
+    }
+};
+
+// Texto do botão estático
+const buttonText = 'Pesquisar';
+
+// Posição do dropdown
+const dropdownPosition = ref({ top: 0, left: 0, width: 0 });
+
+// Atualiza a posição do dropdown quando as sugestões são mostradas
+const updateDropdownPosition = () => {
+    if (suggestionsRef.value) {
+        const rect = suggestionsRef.value.getBoundingClientRect();
+        dropdownPosition.value = {
+            top: rect.bottom + 8,
+            left: rect.left,
+            width: rect.width
+        };
+    }
 };
 
 // Atualiza o valor quando o prop muda
 watch(() => props.searchTerm, (newValue) => {
     searchValue.value = newValue || '';
+});
+
+// Atualiza posição quando as sugestões mudam
+watch(() => showSuggestions.value, () => {
+    if (showSuggestions.value) {
+        console.log('Sugestões mostradas:', suggestions.value);
+        nextTick(() => updateDropdownPosition());
+        console.log('Posição do dropdown:', dropdownPosition.value);
+    }
 });
 
 </script>
@@ -138,13 +171,13 @@ watch(() => props.searchTerm, (newValue) => {
             </a>
         </div>
 
-        <nav class="sticky top-0 z-50 bg-slate-900 shadow-2xl">
-            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                <Link href="/" class="text-2xl font-black tracking-tighter uppercase text-white">
+        <nav class="sticky top-0 z-40 bg-slate-900 shadow-2xl overflow-visible">
+            <div class="max-w-7xl mx-auto px-4 md:px-6 h-auto md:h-20 flex flex-col md:flex-row items-center py-3 md:py-0 gap-3 md:gap-0 overflow-visible">
+                <Link href="/" class="text-xl md:text-2xl font-black tracking-tighter uppercase text-white flex-shrink-0">
                     Erp<span class="text-indigo-500">Vue Laravel</span>
                 </Link>
                 
-                <div class="hidden md:flex flex-1 max-w-md mx-10 relative" ref="suggestionsRef">
+                <div class="flex flex-1 w-full md:max-w-md mx-auto relative" ref="suggestionsRef">
                     <input 
                         v-model="searchValue"
                         @input="handleInput"
@@ -153,21 +186,22 @@ watch(() => props.searchTerm, (newValue) => {
                         @focus="searchValue.length >= 2 && fetchSuggestions(searchValue)"
                         type="text" 
                         placeholder="Buscar na loja..."
-                        class="w-full bg-slate-800 border-transparent rounded-2xl pl-4 pr-24 py-3 text-sm text-white placeholder-slate-500 focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                        class="w-full bg-slate-800 border-transparent rounded-2xl pl-4 pr-24 py-2.5 md:py-3 text-sm text-white placeholder-slate-500 focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                         autocomplete="off"
                     />
                     <button 
                         @click="handleLupaClick"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary-hover active:scale-95 active:shadow-lg text-white px-3 md:px-4 py-2 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-lg shadow-primary/20 flex items-center gap-1 md:gap-2 cursor-pointer transform"
+                        :title="buttonText"
                     >
                         <Search class="w-4 h-4" />
-                        <span>Pesquisar</span>
+                        <span class="hidden sm:inline">{{ buttonText }}</span>
                     </button>
                     
                     <!-- Dropdown de Sugestões -->
                     <div
-                        v-show="showSuggestions && suggestions.length > 0"
-                        class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[100]"
+                        v-if="showSuggestions && suggestions.length > 0"
+                        class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[9999] min-w-[320px]"
                     >
                         <div class="max-h-80 overflow-y-auto py-2">
                             <div

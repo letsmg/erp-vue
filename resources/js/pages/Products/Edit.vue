@@ -198,7 +198,9 @@ const dragOptions = {
 
                     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div class="flex items-center gap-3"><Search class="w-5 h-5 text-amber-600" /><h3 class="text-xs font-black uppercase tracking-widest text-gray-500">SEO Meta Tags</h3></div>
-                        <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">SEO Title (Máx 70)</label><input v-model="form.meta_title" maxlength="70" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required /></div>
+                        <div class="text-xs text-gray-500 bg-amber-50 p-3 rounded-xl mb-4">
+                            <strong>SEO Title e H1</strong> são derivados do campo <strong>Descrição</strong> do produto (limitado a 70 caracteres para SEO Title).
+                        </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Palavras-Chave (Enter)</label>
                             <div class="flex flex-wrap gap-2 p-3 border border-gray-100 bg-gray-50 rounded-2xl">
@@ -214,7 +216,6 @@ const dragOptions = {
                     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div class="flex items-center gap-3"><FileText class="w-5 h-5 text-green-600" /><h3 class="text-xs font-black uppercase tracking-widest text-gray-500">Conteúdo On-Page</h3></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Título H1 Principal</label><input v-model="form.h1" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required /></div>
                             <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Texto de Apresentação (Text 1)</label><textarea v-model="form.text1" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required></textarea></div>    
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
