@@ -48,32 +48,26 @@ jobs:
             set -e
             cd /var/www/erp
             
-            echo "🛠️ Garantindo ferramentas..."
-            sudo apt update && sudo apt install unzip -y
-
-            echo "🧹 Limpeza Total..."
+            echo "🧹 Limpeza e Extração..."
             sudo find . -maxdepth 1 ! -name '.env' ! -name 'storage' ! -name '.' -exec rm -rf {} +
-
-            echo "📦 Extraindo novo código..."
             sudo unzip -o /tmp/deploy.zip -d .
             sudo rm /tmp/deploy.zip
 
-            echo "🔐 Permissões Provisórias (Para evitar erro de Log)..."
-            # Damos permissão antes de rodar os comandos artisan
+            echo "🔐 Permissões Iniciais..."
             sudo chown -R www-data:www-data /var/www/erp
             sudo chmod -R 775 storage bootstrap/cache
 
             echo "🗄️ Database & Cache..."
-            # Se a migration de remover colunas der erro, o fresh vai travar. 
-            # Verifique se a sua migration 'create_seo_table' condiz com o estado final desejado.
-            php artisan migrate:fresh --seed --force
-            php artisan optimize:clear
+            # Rodamos como sudo -u www-data para garantir que os logs criados pertençam ao dono certo
+            sudo -u www-data php artisan migrate:fresh --seed --force
+            sudo -u www-data php artisan optimize:clear
             
             echo "🔗 Storage Link..."
+            # Removemos o link antigo se existir e criamos o novo com sudo
             sudo rm -rf public/storage
-            php artisan storage:link
+            sudo -u www-data php artisan storage:link
 
-            echo "🔐 Ajustando Permissões Finais..."
+            echo "🔐 Permissões Finais (Assets)..."
             sudo chown -R www-data:www-data /var/www/erp
             sudo chmod -R 775 storage bootstrap/cache public/build
             
