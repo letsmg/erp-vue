@@ -2,7 +2,7 @@
 import StoreLayout from '@/Layouts/StoreLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { onMounted, ref, watch } from 'vue';
-import { debounce } from 'lodash';
+import { debounce } from 'lodash-es';
 import { 
     ShoppingBag, ChevronLeft, 
     ChevronRight, ShieldCheck, SearchX, ArrowUpDown, ChevronDown, Package, Loader2,
@@ -24,68 +24,117 @@ const lastPage = ref(props.products.last_page);
 const isLoading = ref(false);
 const hasMoreProducts = ref(props.products.next_page_url !== null);
 
-// Estado local para filtros (controlado totalmente local)
+// Estado local para filtros
 const localSearch = ref(props.filters?.search || '');
 const localMaxPrice = ref(props.filters?.max_price || '');
 const localBrand = ref(props.filters?.brand || '');
 const localSortBy = ref(props.filters?.sort || 'created_at_desc');
 
-// Estados do modal de termos (simulando useStoreIndex)
-const showTermsModal = ref(false);
-const termsAccepted = ref(false);
-
-// Funções do modal
-const acceptTerms = () => {
-    if (!termsAccepted.value) return;
+// Sincroniza com URL ao carregar
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchFromUrl = urlParams.get('search');
     
-    localStorage.setItem('erp_terms_accepted', 'true');
-    showTermsModal.value = false;
-    
-    // Faz POST para aceitar termos
-    fetch('/terms/accept', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    });
-};
-
-// Funções para SearchSuggestions
-const handleSearch = (term) => {
-    localSearch.value = term;
-    reloadProducts();
-};
-
-const handleSuggestionSelected = (suggestion) => {
-    console.log('Sugestão selecionada:', suggestion);
-    handleSearch(suggestion.term);
-};
-
-// Função scroll para carrossel (3 produtos por vez)
-const scroll = (id, direction) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    // No mobile, queremos rolar a largura quase total do card visível
-    // No desktop (md), mantemos a lógica de 1/3
-    const isMobile = window.innerWidth < 768;
-    const itemWidth = isMobile ? el.offsetWidth * 0.85 : el.offsetWidth / 3;
-
-    // Força o cancelamento de qualquer scroll em andamento antes de iniciar o novo
-    // Isso evita o bug de "dois cliques" no Firefox
-    const currentPos = el.scrollLeft;
-
-    if (direction === 'right') {
-        const isAtEnd = el.scrollLeft + el.offsetWidth >= el.scrollWidth - 15;
-        if (isAtEnd) {
-            el.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-            el.scrollTo({ left: currentPos + itemWidth, behavior: 'smooth' });
-        }
-    } else {
-        el.scrollTo({ left: currentPos - itemWidth, behavior: 'smooth' });
+    if (searchFromUrl && searchFromUrl !== localSearch.value) {
+        localSearch.value = searchFromUrl;
     }
+});
+
+// Watch para sincronizar com StoreLayout (apenas filtros, não busca automática)
+// Removido watch do localSearch para não buscar ao digitar
+watch(localMaxPrice, () => reloadProducts());
+watch(localBrand, () => reloadProducts());
+watch(localSortBy, () => reloadProducts());
+
+// Função para recarregar produtos
+const reloadProducts = debounce(async () => {
+    isLoading.value = true;
+    
+    try {
+        const params = new URLSearchParams();
+        if (localSearch.value) params.append('search', localSearch.value);
+        if (localMaxPrice.value) params.append('max_price', localMaxPrice.value);
+        if (localBrand.value) params.append('brand', localBrand.value);
+        if (localSortBy.value && typeof localSortBy.value === 'string') {
+            params.append('sort', localSortBy.value);
+        }
+        params.append('page', 1);
+        
+        const url = `/store/products?${params.toString()}`;
+        const timestampedUrl = `${url}&_t=${Date.now()}`;
+        
+        const response = await fetch(timestampedUrl, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            allProducts.value = [...data.data];
+            currentPage.value = data.current_page;
+            hasMoreProducts.value = data.next_page_url !== null;
+        }
+    } catch (error) {
+        console.error('Erro ao recarregar produtos:', error);
+    } finally {
+        isLoading.value = false;
+    }
+}, 500);
+
+// Função Load More
+const loadMoreProducts = async () => {
+    if (isLoading.value || !hasMoreProducts.value) return;
+    
+    isLoading.value = true;
+    
+    try {
+        const nextPage = currentPage.value + 1;
+        
+        const params = new URLSearchParams();
+        if (localSearch.value) params.append('search', localSearch.value);
+        if (localMaxPrice.value) params.append('max_price', localMaxPrice.value);
+        if (localBrand.value) params.append('brand', localBrand.value);
+        if (localSortBy.value && typeof localSortBy.value === 'string') {
+            params.append('sort', localSortBy.value);
+        }
+        params.append('page', nextPage);
+        
+        const url = `/store/products?${params.toString()}`;
+        const timestampedUrl = `${url}&_t=${Date.now()}`;
+        
+        const response = await fetch(timestampedUrl, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            allProducts.value = [...allProducts.value, ...data.data];
+            currentPage.value = data.current_page;
+            hasMoreProducts.value = data.next_page_url !== null;
+        }
+    } catch (error) {
+        console.error('Erro ao carregar mais produtos:', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// Função para limpar todos os filtros
+const clearFilters = () => {
+    localSearch.value = '';
+    localMaxPrice.value = '';
+    localBrand.value = '';
+    localSortBy.value = 'created_at_desc';
+    reloadProducts();
 };
 
 // SEO data
@@ -113,213 +162,32 @@ const sortOptions = [
     { value: 'created_at_asc', label: 'Mais antigos' },
 ];
 
-// Lazy Loading Setup
-onMounted(() => {
-    // Verifica se o browser suporta lazy loading nativo
-    if ('loading' in HTMLImageElement.prototype) {
-        console.log('Native lazy loading supported');
-    } else {
-        // Fallback para browsers antigos
-        setupLazyLoadingFallback();
-    }
-});
+// Função handleSearch removida - busca agora é feita via refresh completo da página
 
-// Sincroniza filtros locais com useStoreIndex (sem sobrescrever com função)
-// REMOVIDO para evitar que Inertia cause refresh
-// watch(() => props.filters?.search, (newValue) => {
-//     if (newValue && typeof newValue === 'string') {
-//         localSearch.value = newValue;
-//         reloadProducts(); // Recarrega sem rolar
-//     }
-// });
+// Função scroll para carrossel
+const scroll = (id, direction) => {
+    const el = document.getElementById(id);
+    if (!el) return;
 
-// watch(() => props.filters?.max_price, (newValue) => {
-//     if (newValue && typeof newValue === 'string') {
-//         localMaxPrice.value = newValue;
-//         reloadProducts(); // Recarrega sem rolar
-//     }
-// });
+    const isMobile = window.innerWidth < 768;
+    const itemWidth = isMobile ? el.offsetWidth * 0.85 : el.offsetWidth / 3;
+    const currentPos = el.scrollLeft;
 
-// watch(() => props.filters?.brand, (newValue) => {
-//     if (newValue && typeof newValue === 'string') {
-//         localBrand.value = newValue;
-//         reloadProducts(); // Recarrega sem rolar
-//     }
-// });
-
-// watch(() => props.filters?.sort, (newValue) => {
-//     if (newValue && typeof newValue === 'string') {
-//         localSortBy.value = newValue;
-//         reloadProducts(); // Recarrega sem rolar
-//     }
-// });
-
-// Apenas watchers locais para controlar tudo
-watch(localSearch, () => reloadProducts());
-watch(localMaxPrice, () => reloadProducts());
-watch(localBrand, () => reloadProducts());
-watch(localSortBy, () => reloadProducts());
-
-const setupLazyLoadingFallback = () => {
-    const lazyImages = document.querySelectorAll('img[loading="lazy"]');
-    
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.src = img.dataset.src || img.src;
-                    img.classList.remove('lazyload');
-                    imageObserver.unobserve(img);
-                }
-            });
-        });
-        
-        lazyImages.forEach(img => {
-            imageObserver.observe(img);
-        });
-    } else {
-        // Fallback para browsers muito antigos
-        lazyImages.forEach(img => {
-            img.src = img.dataset.src || img.src;
-        });
-    }
-};
-
-// Função Load More
-const loadMoreProducts = async () => {
-    if (isLoading.value || !hasMoreProducts.value) return;
-    
-    isLoading.value = true;
-    
-    try {
-        const nextPage = currentPage.value + 1;
-        
-        // Debug dos valores
-        console.log('DEBUG COMPLETO:', {
-            'localSortBy.value': localSortBy.value,
-            'typeof localSortBy.value': typeof localSortBy.value,
-            'props.filters.sort': props.filters?.sort,
-            'props.filters': props.filters,
-            'localSortBy': localSortBy
-        });
-        
-        // Constrói URL com filtros atuais
-        const params = new URLSearchParams();
-        if (localSearch.value) params.append('search', localSearch.value);
-        if (localMaxPrice.value) params.append('max_price', localMaxPrice.value);
-        if (localBrand.value) params.append('brand', localBrand.value);
-        if (localSortBy.value && typeof localSortBy.value === 'string') {
-            params.append('sort', localSortBy.value);
-        }
-        params.append('page', nextPage);
-        
-        const url = `/store/products?${params.toString()}`;
-        console.log('URL sendo solicitada:', url);
-        
-        // Adicionando timestamp para evitar cache
-        const timestampedUrl = `${url}&_t=${Date.now()}`;
-        
-        const response = await fetch(timestampedUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Dados recebidos:', data);
-            
-            // Adiciona novos produtos à lista existente
-            allProducts.value = [...allProducts.value, ...data.data];
-            currentPage.value = data.current_page;
-            hasMoreProducts.value = data.next_page_url !== null;
+    if (direction === 'right') {
+        const isAtEnd = el.scrollLeft + el.offsetWidth >= el.scrollWidth - 15;
+        if (isAtEnd) {
+            el.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-            console.error('Erro na resposta:', response.status, response.statusText);
-            console.error('Response text:', await response.text());
+            el.scrollTo({ left: currentPos + itemWidth, behavior: 'smooth' });
         }
-    } catch (error) {
-        console.error('Erro ao carregar mais produtos:', error);
-    } finally {
-        isLoading.value = false;
+    } else {
+        el.scrollTo({ left: currentPos - itemWidth, behavior: 'smooth' });
     }
-};
-
-// Função para determinar tempo de debounce baseado no tamanho da busca
-const getDebounceTime = () => {
-    const searchLength = localSearch.value.length;
-    
-    if (searchLength === 0) return 500; // Busca vazia
-    if (searchLength <= 3) return 200; // Busca curta (Redis) - mais rápido
-    return 500; // Busca longa (PostgreSQL) - mais lento
-};
-
-// Função para recarregar produtos com filtros (sem rolar)
-const reloadProducts = debounce(async () => {
-    isLoading.value = true;
-    
-    try {
-        // Constrói URL com filtros atuais
-        const params = new URLSearchParams();
-        if (localSearch.value) params.append('search', localSearch.value);
-        if (localMaxPrice.value) params.append('max_price', localMaxPrice.value);
-        if (localBrand.value) params.append('brand', localBrand.value);
-        if (localSortBy.value && typeof localSortBy.value === 'string') {
-            params.append('sort', localSortBy.value);
-        }
-        params.append('page', 1); // Sempre página 1
-        
-        const url = `/store/products?${params.toString()}`;
-        console.log('Recarregando produtos:', url);
-        
-        // Adicionando timestamp para evitar cache
-        const timestampedUrl = `${url}&_t=${Date.now()}`;
-        
-        const response = await fetch(timestampedUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Produtos recarregados:', data);
-            
-            // Substitui todos os produtos
-            allProducts.value = [...data.data];
-            currentPage.value = data.current_page;
-            hasMoreProducts.value = data.next_page_url !== null;
-        } else {
-            console.error('Erro ao recarregar produtos:', response.status, response.statusText);
-        }
-    } catch (error) {
-        console.error('Erro ao recarregar produtos:', error);
-    } finally {
-        isLoading.value = false;
-    }
-}, getDebounceTime()); // Debounce dinâmico
-
-// Função para limpar todos os filtros
-const clearFilters = () => {
-    localSearch.value = '';
-    localMaxPrice.value = '';
-    localBrand.value = '';
-    localSortBy.value = 'created_at_desc';
-    reloadProducts();
 };
 </script>
 
 <template>
-    <StoreLayout v-model:searchTerm="localSearch">
+    <StoreLayout :searchTerm="localSearch" @update:searchTerm="localSearch = $event">
         <Head>
             <title>{{ seoData.title }}</title>
             <meta name="description" :content="seoData.description" />
@@ -372,7 +240,6 @@ const clearFilters = () => {
             
             <aside class="w-full md:w-72">
                 <div class="bg-white p-8 rounded-[3rem] border border-blue-100 shadow-sm md:sticky md:top-32 space-y-10">
-                    <!-- Título dos Filtros -->
                     <h3 class="text-sm font-black uppercase text-blue-900 tracking-wider flex items-center gap-2">
                         <Package class="w-4 h-4" />
                         Filtros
@@ -408,7 +275,6 @@ const clearFilters = () => {
                             </div>
                         </div>
                         
-                        <!-- Botão Limpar Filtros -->
                         <button 
                             @click="clearFilters"
                             class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
@@ -421,8 +287,6 @@ const clearFilters = () => {
             </aside>
 
             <section class="flex-1">
-                
-                <!-- Estatísticas da Paginação -->
                 <div v-if="products.total > 12" class="mb-6 text-center">
                     <p class="text-sm text-slate-500 font-medium">
                         Mostrando 
@@ -436,14 +300,12 @@ const clearFilters = () => {
                 </div>
 
                 <div v-if="allProducts?.length" class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-    
                     <Link 
                         v-for="product in allProducts" 
                         :key="product.slug + '-' + product.id"
                         :href="route('store.product', product.slug)"
                         class="group bg-white p-5 rounded-[2.5rem] md:rounded-[3.5rem] border border-white shadow-sm hover:shadow-2xl transition-all duration-700 block"
                     >
-                        
                         <div class="relative aspect-[4/5] rounded-[2rem] md:rounded-[2.8rem] overflow-hidden bg-blue-100 mb-6">
                             <img 
                                 :src="product.images?.[0] 
@@ -476,12 +338,9 @@ const clearFilters = () => {
                                 </span>
                             </div>
                         </div>
-
                     </Link>
-
                 </div>
 
-                <!-- Botão Carregar Mais -->
                 <div v-if="hasMoreProducts" class="text-center mt-12 mb-8">
                     <button 
                         @click="loadMoreProducts"
@@ -507,43 +366,10 @@ const clearFilters = () => {
                 </div>
             </section>
         </main>
-
-        <Transition enter-active-class="duration-700 ease-out" enter-from-class="opacity-0 translate-y-10" enter-to-class="opacity-100 translate-y-0">
-            <div v-if="showTermsModal" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-blue-900/95 backdrop-blur-2xl">
-                <div class="bg-white w-full max-w-xl rounded-[4rem] p-12 shadow-2xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
-                    
-                    <div class="w-20 h-20 bg-primary/5 text-primary rounded-3xl flex items-center justify-center mb-8">
-                        <ShieldCheck class="w-10 h-10" />
-                    </div>
-
-                    <h2 class="text-3xl font-black text-slate-900 mb-6 uppercase italic tracking-tighter leading-none">Proteção de Dados & Auditoria</h2>
-                    <p class="text-slate-500 text-sm mb-10 leading-relaxed font-medium">
-                        Para sua segurança, registramos seu IP e atividades para fins de auditoria cibernética. 
-                        Ao prosseguir, você concorda com nossos <a href="#" class="text-primary font-black underline decoration-2 underline-offset-4">termos de uso</a> e política de privacidade.
-                    </p>
-
-                    <label class="flex items-center gap-4 cursor-pointer mb-10 bg-blue-50 p-6 rounded-3xl border border-blue-100 hover:bg-primary/5 transition-colors group">
-                        <input type="checkbox" v-model="termsAccepted" class="h-6 w-6 rounded-lg border-blue-300 text-primary focus:ring-primary transition-all" />
-                        <span class="text-[11px] font-black text-blue-700 uppercase tracking-tight group-hover:text-primary">Compreendo e aceito as condições de monitoramento.</span>
-                    </label>
-
-                    <button @click="acceptTerms" :disabled="!termsAccepted"
-                        class="w-full py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-xs transition-all shadow-xl"
-                        :class="termsAccepted ? 'bg-blue-900 text-white hover:bg-primary hover:-translate-y-1' : 'bg-blue-100 text-blue-300 cursor-not-allowed'">
-                        Confirmar Acesso
-                    </button>
-                </div>
-            </div>
-        </Transition>
-
     </StoreLayout>
 </template>
 
 <style scoped>
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-.sticky {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 </style>

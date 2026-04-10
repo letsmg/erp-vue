@@ -51,29 +51,35 @@ class SearchSuggestionsService
         }
 
         try {
-            // Tenta buscar do cache primeiro
+            // 1. PRIMEIRO: Busca do cache Redis
             $cacheKey = self::SUGGESTIONS_CACHE_KEY . ':' . strtolower($term);
             $cached = Redis::get($cacheKey);
             
             if ($cached) {
+                Log::info('Cache HIT - retornando do Redis', [
+                    'term' => $term,
+                    'cache_key' => $cacheKey
+                ]);
                 return json_decode($cached, true);
             }
 
-            // Busca sugestões do banco de dados (produtos reais)
+            Log::info('Cache MISS - buscando do banco', [
+                'term' => $term,
+                'cache_key' => $cacheKey
+            ]);
+
+            // 2. SEGUNDO: Redis não tem dados - busca do PostgreSQL
             $suggestions = $this->generateSuggestionsFromDatabase($term, $limit);
             
-            // Cacheia resultado
-            Redis::setex($cacheKey, self::SUGGESTIONS_CACHE_TTL, json_encode($suggestions));
+            // 3. TERCEIRO: Se encontrou produtos, cacheia no Redis
+            if (!empty($suggestions)) {
+                Redis::setex($cacheKey, self::SUGGESTIONS_CACHE_TTL, json_encode($suggestions));
+            }
             
             return $suggestions;
             
         } catch (\Illuminate\Redis\Connections\ConnectionException $e) {
-            // Redis não está disponível - busca direto do banco
-            Log::warning('Redis indisponível, buscando direto do banco', [
-                'term' => $term,
-                'error' => $e->getMessage()
-            ]);
-            
+            // Redis não está disponível - busca direto do PostgreSQL
             return $this->generateSuggestionsFromDatabase($term, $limit);
             
         } catch (\Exception $e) {
@@ -597,6 +603,7 @@ class SearchSuggestionsService
         }
     }
 
+    
     /**
      * Obtém estatísticas das buscas
      */

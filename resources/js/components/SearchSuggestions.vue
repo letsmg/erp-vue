@@ -6,8 +6,10 @@
       v-model="searchTerm"
       @input="handleInput"
       @keydown="handleKeydown"
-      @focus="showSuggestions = true"
+      @focus="() => alert('🔍 DEBUG: SearchSuggestions input focado')"
       @blur="hideSuggestions"
+      @click="() => alert('🔍 DEBUG: SearchSuggestions input clicado')"
+      @keyup="() => alert('🔍 DEBUG: SearchSuggestions keyup: ' + searchTerm)"
       placeholder="Buscar produtos..."
       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
@@ -43,6 +45,10 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import { debounce } from 'lodash-es'
+
+// DEBUG: Verificar se este componente está sendo carregado
+alert('🔍 DEBUG: SearchSuggestions.vue carregado!');
+console.log('🔍 DEBUG: SearchSuggestions.vue script setup executado');
 
 const props = defineProps({
   initialSearch: {
