@@ -18,19 +18,17 @@ class ClientSeeder extends Seeder
         // Criar 10 usuários clientes com padrão cli@1.com, cli@2.com...
         for ($i = 1; $i <= 10; $i++) {
             $email = "cli@$i.com";
-            
-            // Verifica se o usuário já existe para evitar erro de Unique
-            $user = User::where('email', $email)->first();
 
-            if (!$user) {
-                $user = User::factory()->create([
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
                     'name' => "Cliente Teste $i",
                     'email' => $email,
                     'password' => $password,
                     'access_level' => 2, // CLIENT
                     'is_active' => true,
-                ]);
-            }
+                ]
+            );
 
             // Garante que o cliente associado ao usuário também exista
             Client::firstOrCreate(
