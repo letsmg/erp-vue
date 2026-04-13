@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Api;
 
 use App\Models\Client;
 use App\Models\User;
@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-class ClientFeatureTest extends TestCase
+class ClientTest extends TestCase
 {
     use RefreshDatabase;
 

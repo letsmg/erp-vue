@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Api;
 
 use App\Models\Product;
 use App\Models\ShoppingCart;
@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-class ShoppingCartFeatureTest extends TestCase
+class ShoppingCartTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -35,7 +35,7 @@ class ShoppingCartFeatureTest extends TestCase
     }
 
     #[Test]
-    public function admin_cannot_view_cart()
+    public function admin_can_view_cart()
     {
         $admin = User::factory()->admin()->create();
 
