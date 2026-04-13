@@ -17,13 +17,14 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, bcmath, gd, zip, pgsql
 
+      - name: 📦 Install Composer
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
       - name: 📝 Prepare Build Env
         run: |
           cp .env.example .env
+          # Agora o artisan vai funcionar porque a pasta vendor já existe!
           php artisan key:generate
-
-      - name: 📦 Install Composer
-        run: composer install --no-dev --optimize-autoloader --no-interaction
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -63,7 +64,7 @@ jobs:
             
             # 3. Rodar comandos de produção na pasta nova
             cd /var/www/erp_new
-            sudo -u www-data php artisan migrate --force  # <-- SEMPRE SEM FRESH
+            sudo -u www-data php artisan migrate --seed --force  # <-- SEMPRE SEM FRESH
             sudo -u www-data php artisan storage:link
             sudo -u www-data php artisan optimize
             
