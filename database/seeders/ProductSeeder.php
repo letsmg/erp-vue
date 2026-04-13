@@ -21,7 +21,17 @@ class ProductSeeder extends Seeder
             ['email' => 'fornecedor@teste.com'],
             [
                 'company_name' => 'Fornecedor Padrão',
-                'email' => 'fornecedor@teste.com'
+                'email' => 'fornecedor@teste.com',
+                'cnpj' => '00.000.000/0000-00',
+                'state_registration' => 'ISENTO',
+                'address' => 'Rua do Fornecedor, 100',
+                'neighborhood' => 'Centro',
+                'city' => 'São Paulo',
+                'state' => 'SP',
+                'zip_code' => '01000-000',
+                'contact_name_1' => 'Contato Padrão',
+                'phone_1' => '(11) 00000-0000',
+                'is_active' => true,
             ]
         );
 
@@ -34,7 +44,10 @@ class ProductSeeder extends Seeder
             // 1. Criar o SEO
             // meta_title e h1 são derivados do product->description (usado no frontend)
             $product->seo()->firstOrCreate(
-                ['product_id' => $product->id],
+                [
+                    'seoable_id' => $product->id,
+                    'seoable_type' => get_class($product),
+                ],
                 [
                     'meta_description' => "Compre agora " . $product->description . " com as melhores condições.",
                     'meta_keywords'    => str_replace(' ', ', ', $product->description),
