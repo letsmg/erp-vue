@@ -23,7 +23,6 @@ jobs:
       - name: 📝 Prepare Build Env
         run: |
           cp .env.example .env
-          # Agora o artisan vai funcionar porque a pasta vendor já existe!
           php artisan key:generate
 
       - name: 🟢 Setup Node.js
@@ -48,34 +47,44 @@ jobs:
 
       - name: 🚀 Deploy Atômico (Zero Downtime)
         run: |
-          scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/erp_deploy.zip
+          scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/erp_monolito_deploy.zip
 
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
             
-            # 1. Preparar pasta temporária para a nova versão
-            sudo rm -rf /var/www/erp_new
-            sudo mkdir -p /var/www/erp_new
-            sudo unzip -o /tmp/erp_deploy.zip -d /var/www/erp_new
+            # CONFIGURAÇÃO DE CAMINHOS DO MONOLITO
+            BASE_DIR="/var/www/erp"
             
-            # 2. Linkar os arquivos persistentes (Shared)
-            sudo ln -sfn /var/www/erp_shared/.env /var/www/erp_new/.env
-            sudo ln -sfn /var/www/erp_shared/storage /var/www/erp_new/storage
+            # 1. Preparar pasta temporária
+            sudo rm -rf ${BASE_DIR}_new
+            sudo mkdir -p ${BASE_DIR}_new
+            sudo unzip -o /tmp/erp_monolito_deploy.zip -d ${BASE_DIR}_new
             
-            # 3. Rodar comandos de produção na pasta nova
-            cd /var/www/erp_new
-            sudo -u www-data php artisan migrate --seed --force  # <-- SEMPRE SEM FRESH
+            # 2. AJUSTE DE PERMISSÕES ANTECIPADO
+            # Garante que o usuário www-data possa criar o symlink do storage
+            sudo chown -R www-data:www-data ${BASE_DIR}_new
+            
+            # 3. Linkar arquivos persistentes (Shared)
+            sudo ln -sfn ${BASE_DIR}_shared/.env ${BASE_DIR}_new/.env
+            sudo ln -sfn ${BASE_DIR}_shared/storage ${BASE_DIR}_new/storage
+            
+            # 4. Comandos Laravel (Rodando como www-data)
+            cd ${BASE_DIR}_new
+            
+            # Remove link ou pasta storage residual do zip
+            sudo rm -rf public/storage
+            
+            sudo -u www-data php artisan migrate --force
+            sudo -u www-data php artisan db:seed --force
             sudo -u www-data php artisan storage:link
             sudo -u www-data php artisan optimize
             
-            # 4. SWAP ATÔMICO: O momento em que o site atualiza
-            # Importante: o Nginx deve apontar para /var/www/erp_live
-            sudo ln -sfn /var/www/erp_new /var/www/erp_live
+            # 5. SWAP ATÔMICO (Ativa a nova versão)
+            sudo ln -sfn ${BASE_DIR}_new ${BASE_DIR}_live
             
-            # 5. Permissões e Limpeza
-            sudo chown -R www-data:www-data /var/www/erp_new
+            # 6. Finalização e Reinicialização do PHP-FPM
             sudo systemctl restart php8.3-fpm
-            sudo rm /tmp/erp_deploy.zip
+            sudo rm /tmp/erp_monolito_deploy.zip
             
-            echo "✅ Deploy do ERP Monolito Finalizado!"
+            echo "✅ Deploy do ERP Monolito Finalizado com Sucesso!"
           EOF
