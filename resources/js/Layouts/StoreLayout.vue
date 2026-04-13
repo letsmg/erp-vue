@@ -4,7 +4,7 @@ import {
     Search, ShoppingBag, Cloud, User as UserIcon, 
     Settings, Package, LogOut, ChevronDown 
 } from 'lucide-vue-next';
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, onMounted } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { debounce } from 'lodash-es';
 
@@ -37,6 +37,28 @@ const props = defineProps({
 
 // Avisa o Index que o usuário digitou algo
 const emit = defineEmits(['update:searchTerm']);
+
+// Lê o termo de busca da URL ao carregar o componente
+onMounted(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchFromUrl = urlParams.get('search');
+    
+    if (searchFromUrl) {
+        searchValue.value = searchFromUrl;
+    }
+});
+
+// Monitora mudanças na URL para atualizar o searchValue
+watch(() => page.url, () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchFromUrl = urlParams.get('search');
+    
+    if (searchFromUrl && searchFromUrl !== searchValue.value) {
+        searchValue.value = searchFromUrl;
+    } else if (!searchFromUrl && searchValue.value) {
+        searchValue.value = '';
+    }
+});
 
 // Fecha sugestões ao clicar fora
 onClickOutside(suggestionsRef, () => {
@@ -115,13 +137,7 @@ const handleSearch = () => {
 
 // Função para buscar com clique na lupa
 const handleLupaClick = () => {
-    if (searchValue.value.trim()) {
-        // Se tem conteúdo, faz a busca
-        handleSearch();
-    } else {
-        // Se está vazio, limpa a busca e volta para index
-        window.location.href = '/';
-    }
+    handleSearch();
 };
 
 // Texto do botão estático
