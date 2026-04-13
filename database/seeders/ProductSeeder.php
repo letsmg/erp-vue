@@ -48,7 +48,9 @@ class ProductSeeder extends Seeder
                     if ($imageContent) {
                         Storage::disk('public')->put('products/' . $imageName, $imageContent);
 
-                        ProductImage::create([
+                        ProductImage::firstOrCreate(
+                            ['product_id' => $product->id, 'order' => $i],
+                            [
                             'product_id' => $product->id,
                             'path'       => $imageName,
                             'order'      => $i
@@ -65,3 +67,4 @@ class ProductSeeder extends Seeder
         $this->command->info('Seeder finalizado!');
     }
 }
+
