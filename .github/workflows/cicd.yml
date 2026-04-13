@@ -61,28 +61,30 @@ jobs:
             sudo unzip -o /tmp/erp_monolito_deploy.zip -d ${BASE_DIR}_new
             
             # 2. AJUSTE DE PERMISSÕES ANTECIPADO
-            # Garante que o usuário www-data possa criar o symlink do storage
+            # Garante que www-data seja dono da nova pasta e do cofre de arquivos
             sudo chown -R www-data:www-data ${BASE_DIR}_new
+            sudo chown -R www-data:www-data ${BASE_DIR}_shared/storage
             
             # 3. Linkar arquivos persistentes (Shared)
+            # Linka o .env e a pasta storage raiz para o Laravel usar internamente
             sudo ln -sfn ${BASE_DIR}_shared/.env ${BASE_DIR}_new/.env
             sudo ln -sfn ${BASE_DIR}_shared/storage ${BASE_DIR}_new/storage
             
-            # 4. Comandos Laravel (Rodando como www-data)
+            # 4. CORREÇÃO DO LINK PÚBLICO DE IMAGENS (Resolve 403/404)
+            # Removemos qualquer resquício e criamos o link manual absoluto para a pasta pública
+            sudo rm -rf ${BASE_DIR}_new/public/storage
+            sudo ln -sfn ${BASE_DIR}_shared/storage/app/public ${BASE_DIR}_new/public/storage
+            
+            # 5. Comandos Laravel (Rodando como www-data)
             cd ${BASE_DIR}_new
-            
-            # Remove link ou pasta storage residual do zip
-            sudo rm -rf public/storage
-            
             sudo -u www-data php artisan migrate --force
             sudo -u www-data php artisan db:seed --force
-            sudo -u www-data php artisan storage:link
             sudo -u www-data php artisan optimize
             
-            # 5. SWAP ATÔMICO (Ativa a nova versão)
+            # 6. SWAP ATÔMICO (Ativa a nova versão)
             sudo ln -sfn ${BASE_DIR}_new ${BASE_DIR}_live
             
-            # 6. Finalização e Reinicialização do PHP-FPM
+            # 7. Finalização e Reinicialização do PHP-FPM
             sudo systemctl restart php8.3-fpm
             sudo rm /tmp/erp_monolito_deploy.zip
             
