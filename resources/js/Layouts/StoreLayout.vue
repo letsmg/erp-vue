@@ -4,7 +4,7 @@ import {
     Search, ShoppingBag, Cloud, User as UserIcon, 
     Settings, Package, LogOut, ChevronDown, Sun, Moon, Palette
 } from 'lucide-vue-next';
-import { computed, ref, watch, nextTick, onMounted } from 'vue';
+import { computed, ref, watch, nextTick, onMounted, provide } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { debounce } from 'lodash-es';
 
@@ -69,6 +69,16 @@ const textClass = computed(() => {
     }
 });
 
+// Computed style for text color with !important
+const textStyle = computed(() => {
+    switch (theme.value) {
+        case 'dark':
+            return { color: 'white !important' };
+        default:
+            return {};
+    }
+});
+
 // Dropdown state
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);
@@ -92,6 +102,9 @@ const highlightedIndex = ref(-1);
 const props = defineProps({
     searchTerm: String
 });
+
+// Provide theme to child components
+provide('theme', theme);
 
 // Avisa o Index que o usuário digitou algo
 const emit = defineEmits(['update:searchTerm']);
@@ -236,7 +249,7 @@ watch(() => showSuggestions.value, () => {
 </script>
 
 <template>
-    <div :class="['min-h-screen', backgroundClass, textClass, 'font-sans', 'pb-20']">
+    <div :class="['min-h-screen', backgroundClass, textClass, 'font-sans', 'pb-20']" :style="textStyle">
         <!-- ... resto do template ... -->
         <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-6 flex justify-center items-center gap-4 shadow-md">
             <div class="flex items-center gap-2">
@@ -461,7 +474,7 @@ watch(() => showSuggestions.value, () => {
 
         <slot />
 
-        <footer class="max-w-7xl mx-auto px-6 mt-20 text-center text-slate-400 text-xs font-bold uppercase tracking-widest border-t border-slate-300 pt-10">
+        <footer class="max-w-7xl mx-auto px-6 mt-20 text-center text-xs font-bold uppercase tracking-widest border-t pt-10" :class="theme === 'dark' ? 'text-white border-slate-700' : 'text-slate-900 border-slate-900'">
             &copy; 2026 Erp Vue Laravel - SaaS Edition
         </footer>
     </div>

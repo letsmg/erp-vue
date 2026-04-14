@@ -1,13 +1,12 @@
 <script setup>
-import StoreLayout from '@/Layouts/StoreLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, ref, watch } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ChevronLeft, ChevronRight, ShoppingBag, ShieldCheck, SearchX, ArrowUpDown, ChevronDown, Package, Loader2, FilterX } from 'lucide-vue-next';
+import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue';
 import { debounce } from 'lodash-es';
-import { 
-    ShoppingBag, ChevronLeft, 
-    ChevronRight, ShieldCheck, SearchX, ArrowUpDown, ChevronDown, Package, Loader2,
-    FilterX
-} from 'lucide-vue-next';
+import StoreLayout from '@/Layouts/StoreLayout.vue';
+
+const theme = inject('theme');
+const page = usePage();
 
 const props = defineProps({
     products: Object,
@@ -137,8 +136,8 @@ const clearFilters = () => {
     reloadProducts();
 };
 
-// SEO data
-const seoData = ref({
+// SEO data from page props
+const seoData = computed(() => page.props.store_seo ?? {
     title: "Vitrine Premium | ERP Vue Laravel",
     description: "Explore nossa seleção exclusiva de produtos.",
     h1: "Catálogo de Produtos"
@@ -194,10 +193,10 @@ const scroll = (id, direction) => {
         </Head>
 
         <header class="max-w-7xl mx-auto px-4 md:px-6 pt-10">
-            <h1 class="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" :class="theme === 'dark' ? 'text-white' : 'text-slate-900'">
                 {{ seoData.h1 }}
             </h1>
-            <p class="text-white text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em]">
+            <p class="text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em text-green-600">
                 {{ seoData.description }}
             </p>
         </header>
@@ -217,7 +216,7 @@ const scroll = (id, direction) => {
                         <div class="absolute inset-0 flex flex-col justify-end md:justify-center px-6 md:px-8 text-white bg-gradient-to-t md:bg-gradient-to-r from-black/80 via-black/50 to-transparent pb-6 md:pb-0">
                             <span class="bg-primary w-fit px-3 py-1 rounded-full text-[9px] font-black uppercase mb-2 md:mb-3 tracking-[0.15em]">Destaque</span>
                             <h2 class="text-lg md:text-2xl font-black mb-2 tracking-tight leading-tight max-w-md uppercase italic line-clamp-2">{{ p.description }}</h2>
-                            <p class="text-lg md:text-xl text-primary-hover mb-3 md:mb-4 font-mono font-bold">R$ {{ p.sale_price }}</p>
+                            <p class="text-lg md:text-xl mb-3 md:mb-4 font-mono font-bold" :class="theme === 'dark' ? 'text-indigo-400' : 'text-primary-hover'">R$ {{ p.sale_price }}</p>
                             
                             <Link :href="route('store.product', p.slug)" 
                                 class="bg-white text-slate-900 px-4 md:px-6 py-2 md:py-3 rounded-xl font-black uppercase text-[10px] w-fit hover:bg-primary hover:text-white transition-all shadow-lg hover:-translate-y-1">
@@ -277,7 +276,8 @@ const scroll = (id, direction) => {
                         
                         <button 
                             @click="clearFilters"
-                            class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                            class="w-full py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                            :class="theme === 'dark' ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800'"
                         >
                             <FilterX class="w-4 h-4" />
                             Limpar Filtros
@@ -287,24 +287,13 @@ const scroll = (id, direction) => {
             </aside>
 
             <section class="flex-1">
-                <div v-if="products.total > 12" class="mb-6 text-center">
-                    <p class="text-sm text-slate-500 font-medium">
-                        Mostrando 
-                        <span class="font-black text-slate-900">{{ products.from || 0 }}</span> 
-                        a 
-                        <span class="font-black text-slate-900">{{ products.to || 0 }}</span> 
-                        de 
-                        <span class="font-black text-slate-900">{{ products.total }}</span> 
-                        produtos
-                    </p>
-                </div>
-
                 <div v-if="allProducts?.length" class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
                     <Link 
                         v-for="product in allProducts" 
                         :key="product.slug + '-' + product.id"
                         :href="route('store.product', product.slug)"
-                        class="group bg-white p-5 rounded-[2.5rem] md:rounded-[3.5rem] border border-white shadow-sm hover:shadow-2xl transition-all duration-700 block"
+                        class="group p-5 rounded-[2.5rem] md:rounded-[3.5rem] border shadow-sm hover:shadow-2xl transition-all duration-700 block"
+                        :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-white'"
                     >
                         <div class="relative aspect-[4/5] rounded-[2rem] md:rounded-[2.8rem] overflow-hidden bg-blue-100 mb-6">
                             <img 
@@ -324,16 +313,16 @@ const scroll = (id, direction) => {
                         </div>
 
                         <div class="px-3">
-                            <h3 class="text-xs md:text-sm font-black uppercase truncate text-slate-800 tracking-tight">
+                            <h3 class="text-xs md:text-sm font-black uppercase truncate tracking-tight" :class="theme === 'dark' ? 'text-white' : 'text-slate-800'">
                                 {{ product.description }}
                             </h3>
 
                             <div class="flex items-center justify-between mt-2">
-                                <p class="text-sm md:text-2xl font-black text-primary font-mono tracking-tighter">
+                                <p class="text-sm md:text-2xl font-black font-mono tracking-tighter" :class="theme === 'dark' ? 'text-indigo-400' : 'text-primary'">
                                     R$ {{ product.sale_price }}
                                 </p>
 
-                                <span class="text-[8px] font-black text-slate-300 uppercase tracking-widest group-hover:text-primary transition-colors">
+                                <span class="text-[8px] font-black uppercase tracking-widest group-hover:text-primary transition-colors" :class="theme === 'dark' ? 'text-slate-400' : 'text-slate-300'">
                                     Ver Mais
                                 </span>
                             </div>
@@ -354,15 +343,9 @@ const scroll = (id, direction) => {
                     </button>
                 </div>
 
-                <div v-else-if="allProducts?.length" class="text-center mt-12 mb-8">
-                    <p class="text-slate-400 text-sm font-medium uppercase tracking-wider">
-                        Você chegou ao fim! Mostrando todos os {{ allProducts.length }} de {{ products.total }} produtos
-                    </p>
-                </div>
-
-                <div v-else class="text-center py-32 bg-white rounded-[4rem] border-4 border-dashed border-blue-50">
-                    <SearchX class="w-16 h-16 text-blue-200 mx-auto mb-6" />
-                    <p class="text-blue-400 font-black uppercase tracking-[0.3em] text-sm italic">Nenhum resultado para os filtros aplicados</p>
+                <div v-else class="text-center py-32 rounded-[4rem] border-4 border-dashed" :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-blue-50'">
+                    <SearchX class="w-16 h-16 mx-auto mb-6" :class="theme === 'dark' ? 'text-slate-600' : 'text-blue-200'" />
+                    <p class="font-black uppercase tracking-[0.3em] text-sm italic" :class="theme === 'dark' ? 'text-slate-400' : 'text-blue-400'">Nenhum resultado para os filtros aplicados</p>
                 </div>
             </section>
         </main>

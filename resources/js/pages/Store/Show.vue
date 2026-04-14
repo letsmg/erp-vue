@@ -5,8 +5,10 @@ import {
     Eye, EyeOff, LayoutDashboard, ChevronLeft, ChevronRight,
     Tag, ShieldCheck, Truck
 } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
-import StoreLayout from '@/Layouts/StoreLayout.vue'; 
+import { computed, ref, watch, inject } from 'vue';
+import StoreLayout from '@/Layouts/StoreLayout.vue';
+
+const theme = inject('theme'); 
 
 const props = defineProps({
     product: Object,
@@ -118,7 +120,7 @@ const formatCurrency = (value) => {
 
         <div class="min-h-screen pb-24">
             <div class="max-w-7xl mx-auto px-6 py-8">
-                <Link :href="route('products.index')" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] transition group">
+                <Link :href="route('products.index')" class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition group" :class="theme === 'dark' ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-400 hover:text-indigo-600'">
                     <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
                     Voltar para Loja
                 </Link>
@@ -128,7 +130,7 @@ const formatCurrency = (value) => {
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 items-start">
                     
                     <div class="md:col-span-5 flex flex-col gap-6 sticky top-8">
-                        <div class="relative aspect-square bg-white rounded-[2.5rem] overflow-hidden flex items-center justify-center border border-gray-100 shadow-2xl shadow-gray-200/40 group">
+                        <div class="relative aspect-square rounded-[2.5rem] overflow-hidden flex items-center justify-center border shadow-2xl group" :class="theme === 'dark' ? 'bg-slate-800 border-slate-700 shadow-slate-900/40' : 'bg-white border-gray-100 shadow-gray-200/40'">
                             <div v-if="isPromoActive" class="absolute top-6 left-6 z-20 bg-red-600 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg animate-pulse uppercase tracking-widest">
                                 Oferta Especial
                             </div>
@@ -138,10 +140,10 @@ const formatCurrency = (value) => {
                                     class="object-contain w-full h-full p-8 transition-all duration-700 animate-in fade-in zoom-in-95" />
                                 
                                 <template v-if="product.images.length > 1">
-                                    <button @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur p-2 rounded-full shadow-xl hover:bg-indigo-600 hover:text-white transition">
+                                    <button @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 backdrop-blur p-2 rounded-full shadow-xl hover:bg-indigo-600 hover:text-white transition" :class="theme === 'dark' ? 'bg-slate-700/90' : 'bg-white/90'">
                                         <ChevronLeft class="w-5 h-5" />
                                     </button>
-                                    <button @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur p-2 rounded-full shadow-xl hover:bg-indigo-600 hover:text-white transition">
+                                    <button @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 backdrop-blur p-2 rounded-full shadow-xl hover:bg-indigo-600 hover:text-white transition" :class="theme === 'dark' ? 'bg-slate-700/90' : 'bg-white/90'">
                                         <ChevronRight class="w-5 h-5" />
                                     </button>
                                 </template>
@@ -151,8 +153,9 @@ const formatCurrency = (value) => {
 
                         <div v-if="product.images?.length > 1" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide justify-center">
                             <button v-for="(img, index) in product.images" :key="img.id" @click="activeImageIndex = index"
-                                class="w-16 h-16 shrink-0 rounded-2xl border-2 overflow-hidden bg-white p-1 transition-all"
-                                :class="activeImageIndex === index ? 'border-indigo-600 scale-105 shadow-md' : 'border-gray-100 opacity-50 hover:opacity-100'">
+                                class="w-16 h-16 shrink-0 rounded-2xl border-2 overflow-hidden p-1 transition-all"
+                                :class="activeImageIndex === index ? 'border-indigo-600 scale-105 shadow-md' : (theme === 'dark' ? 'border-slate-700 opacity-50 hover:opacity-100' : 'border-gray-100 opacity-50 hover:opacity-100')"
+                                :style="activeImageIndex !== index && theme === 'dark' ? 'background-color: #1e293b' : ''">
                                 <img :src="getImageUrl(img.path)" class="w-full h-full object-contain" />
                             </button>
                         </div>
@@ -160,28 +163,28 @@ const formatCurrency = (value) => {
 
                     <div class="md:col-span-5 flex flex-col pt-2">
                         <nav class="text-[10px] uppercase font-black text-indigo-500 mb-3 tracking-[0.4em]">
-                            {{ product.brand }} <span class="text-gray-300 mx-2">/</span> {{ product.model }}
+                            {{ product.brand }} <span class="mx-2" :class="theme === 'dark' ? 'text-slate-500' : 'text-gray-300'">/</span> {{ product.model }}
                         </nav>
 
-                        <h1 class="text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-none tracking-tighter">
+                        <h1 class="text-4xl lg:text-5xl font-black mb-6 leading-none tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
                             {{ seoData.h1 || product.description }}
                         </h1>
 
                         <div class="mb-10 flex flex-col">
                             <template v-if="isPromoActive">
-                                <span class="text-gray-400 line-through text-lg font-bold">{{ formatCurrency(product.sale_price) }}</span>
-                                <div class="text-6xl font-black text-red-600 tracking-tighter">
+                                <span class="line-through text-lg font-bold" :class="theme === 'dark' ? 'text-slate-500' : 'text-gray-400'">{{ formatCurrency(product.sale_price) }}</span>
+                                <div class="text-6xl font-black tracking-tighter" :class="theme === 'dark' ? 'text-red-400' : 'text-red-600'">
                                     {{ formatCurrency(product.promo_price) }}
                                 </div>
                             </template>
-                            <div v-else class="text-6xl font-black text-gray-900 tracking-tighter">
+                            <div v-else class="text-6xl font-black tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
                                 {{ formatCurrency(product.sale_price) }}
                             </div>
-                            <p class="text-[10px] font-black uppercase text-gray-400 mt-2 tracking-widest">Ou 10x sem juros no cartão</p>
+                            <p class="text-[10px] font-black uppercase mt-2 tracking-widest" :class="theme === 'dark' ? 'text-slate-400' : 'text-gray-400'">Ou 10x sem juros no cartão</p>
                         </div>
 
                         <div v-if="seoData.text1" class="mb-10 border-l-4 border-indigo-600 pl-6 py-1">
-                            <p class="text-gray-600 text-[16px] leading-relaxed font-medium">
+                            <p class="text-[16px] leading-relaxed font-medium" :class="theme === 'dark' ? 'text-slate-300' : 'text-gray-600'">
                                 {{ seoData.text1 }}
                             </p>
                         </div>
@@ -192,14 +195,14 @@ const formatCurrency = (value) => {
                                 Adicionar ao Carrinho
                             </button>
                             
-                            <div class="flex items-center justify-between px-4 py-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div class="flex items-center justify-between px-4 py-4 rounded-2xl border" :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-gray-50 border-gray-100'">
                                 <div class="flex flex-col items-center gap-1">
                                     <Truck class="w-4 h-4 text-indigo-600" />
-                                    <span class="text-[8px] font-black uppercase">Frete Rápido</span>
+                                    <span class="text-[8px] font-black uppercase" :class="theme === 'dark' ? 'text-slate-300' : 'text-slate-900'">Frete Rápido</span>
                                 </div>
-                                <div class="flex flex-col items-center gap-1 border-x border-gray-200 px-8">
+                                <div class="flex flex-col items-center gap-1 border-x px-8" :class="theme === 'dark' ? 'border-slate-700' : 'border-gray-200'">
                                     <ShieldCheck class="w-4 h-4 text-indigo-600" />
-                                    <span class="text-[8px] font-black uppercase">Compra Segura</span>
+                                    <span class="text-[8px] font-black uppercase" :class="theme === 'dark' ? 'text-slate-300' : 'text-slate-900'">Compra Segura</span>
                                 </div>
                                 <div class="flex flex-col items-center gap-1">
                                     <Tag class="w-4 h-4 text-indigo-600" />
@@ -212,15 +215,15 @@ const formatCurrency = (value) => {
 
                 </div>
 
-                <section class="mt-24 pt-20 border-t border-gray-100">
+                <section class="mt-24 pt-20 border-t" :class="theme === 'dark' ? 'border-slate-700' : 'border-gray-100'">
                     <div class="max-w-4xl mx-auto">
                         <div class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
                             Ficha Técnica
                         </div>
-                        <h2 class="text-3xl lg:text-4xl font-black text-gray-900 uppercase tracking-tighter mb-10">
+                        <h2 class="text-3xl lg:text-4xl font-black uppercase tracking-tighter mb-10" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
                             {{ seoData.h2 || 'Especificações Completas' }}
                         </h2>
-                        <div class="prose prose-indigo max-w-none text-gray-600 text-lg leading-relaxed whitespace-pre-line font-medium italic">
+                        <div class="prose prose-indigo max-w-none text-lg leading-relaxed whitespace-pre-line font-medium italic" :class="theme === 'dark' ? 'text-slate-300' : 'text-gray-600'">
                             {{ seoData.text2 || 'O fabricante não disponibilizou detalhes técnicos adicionais para este modelo.' }}
                         </div>
                     </div>
@@ -228,22 +231,22 @@ const formatCurrency = (value) => {
 
                 <section class="mt-32">
                     <div class="flex items-center justify-between mb-12">
-                        <h3 class="text-2xl font-black text-gray-900 uppercase tracking-tighter">Quem viu, gostou também</h3>
-                        <div class="flex-1 h-px bg-gray-100 mx-8"></div>
-                        <Link :href="route('products.index')" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Ver Tudo</Link>
+                        <h3 class="text-2xl font-black uppercase tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">Quem viu, gostou também</h3>
+                        <div class="flex-1 h-px mx-8" :class="theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'"></div>
+                        <Link :href="route('products.index')" class="text-[10px] font-black uppercase tracking-widest hover-underline" :class="theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'">Ver Tudo</Link>
                     </div>
 
                     <div v-if="relatedProducts?.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div v-for="item in relatedProducts" :key="item.id" class="group">
                             <Link :href="route('products.preview', item.id)" class="block">
-                                <div class="aspect-square bg-white rounded-[2.5rem] border border-gray-100 overflow-hidden mb-5 flex items-center justify-center p-8 group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 relative">
+                                <div class="aspect-square rounded-[2.5rem] border overflow-hidden mb-5 flex items-center justify-center p-8 group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 relative" :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'">
                                     <img v-if="item.images?.length > 0" 
                                          :src="getImageUrl(item.images[0].path)" 
                                          class="max-w-full max-h-full object-contain group-hover:scale-110 transition duration-500" />
                                     <Globe v-else class="w-12 h-12 text-gray-100" />
                                 </div>
-                                <p class="text-[11px] font-black text-gray-900 uppercase tracking-tight truncate px-2">{{ item.description }}</p>
-                                <div class="text-sm font-black text-indigo-600 mt-1 px-2">{{ formatCurrency(item.sale_price) }}</div>
+                                <p class="text-[11px] font-black uppercase tracking-tight truncate px-2" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">{{ item.description }}</p>
+                                <div class="text-sm font-black mt-1 px-2" :class="theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'">{{ formatCurrency(item.sale_price) }}</div>
                             </Link>
                         </div>
                     </div>
