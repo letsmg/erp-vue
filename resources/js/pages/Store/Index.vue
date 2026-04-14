@@ -196,7 +196,7 @@ const scroll = (id, direction) => {
             <h1 class="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none" :class="theme === 'dark' ? 'text-white' : 'text-slate-900'">
                 {{ seoData.h1 }}
             </h1>
-            <p class="text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em text-green-600">
+            <p class="text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em" :class="theme === 'dark' ? 'text-white' : 'text-slate-900'">
                 {{ seoData.description }}
             </p>
         </header>
