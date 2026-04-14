@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace Database\Seeders;
 
@@ -13,11 +13,12 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->command->warn('Limpando pasta de imagens antiga...');
-        Storage::disk('public')->deleteDirectory('products');
-        Storage::disk('public')->makeDirectory('products');
+        // Garante que a pasta de produtos existe
+        if (!Storage::disk('public')->exists('products')) {
+            Storage::disk('public')->makeDirectory('products');
+        }
 
-        $supplier = Supplier::firstOrCreate(
+        $supplier = Supplier::first() ?? Supplier::firstOrCreate(
             ['email' => 'fornecedor@teste.com'],
             [
                 'company_name' => 'Fornecedor Padrão',
@@ -40,7 +41,7 @@ class ProductSeeder extends Seeder
         Product::factory(20)->create([
             'supplier_id' => $supplier->id
         ])->each(function ($product) {
-            
+
             // 1. Criar o SEO
             // meta_title e h1 são derivados do product->description (usado no frontend)
             $product->seo()->firstOrCreate(
@@ -63,27 +64,26 @@ class ProductSeeder extends Seeder
 
                 try {
                     $imageContent = file_get_contents($imageUrl);
-                    
+
                     if ($imageContent) {
-                        Storage::disk('public')->put('products/' . $imageName, $imageContent);
+                        // Baixa a imagem se não existir no storage
+                        if (!Storage::disk('public')->exists('products/' . $imageName)) {
+                            Storage::disk('public')->put('products/' . $imageName, $imageContent);
+                        }
 
                         ProductImage::firstOrCreate(
                             ['product_id' => $product->id, 'order' => $i],
-                            [
-                            'product_id' => $product->id,
-                            'path'       => $imageName,
-                            'order'      => $i
-                        ]);
+                            ['path' => $imageName]
+                        );
                     }
                 } catch (\Exception $e) {
                     $this->command->error("Falha ao baixar imagem para o produto {$product->id}");
                 }
             }
-            
+
             $this->command->comment("Produto {$product->id} criado com sucesso.");
         });
 
         $this->command->info('Seeder finalizado!');
     }
 }
-
