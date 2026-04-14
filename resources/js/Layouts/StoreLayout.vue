@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { 
     Search, ShoppingBag, Cloud, User as UserIcon, 
-    Settings, Package, LogOut, ChevronDown 
+    Settings, Package, LogOut, ChevronDown, Sun, Moon, Palette
 } from 'lucide-vue-next';
 import { computed, ref, watch, nextTick, onMounted } from 'vue';
 import { onClickOutside } from '@vueuse/core';
@@ -10,6 +10,64 @@ import { debounce } from 'lodash-es';
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+
+// Theme state
+const theme = ref('custom'); // 'light', 'dark', or 'custom'
+const themeDropdownOpen = ref(false);
+const themeDropdownRef = ref(null);
+
+// Load theme from localStorage on mount
+const loadTheme = () => {
+    const savedTheme = localStorage.getItem('store-theme');
+    if (savedTheme) {
+        theme.value = savedTheme;
+    }
+};
+
+// Save theme to localStorage when it changes
+watch(theme, (newTheme) => {
+    localStorage.setItem('store-theme', newTheme);
+});
+
+// Toggle theme dropdown
+onClickOutside(themeDropdownRef, () => {
+    themeDropdownOpen.value = false;
+});
+
+const toggleThemeDropdown = () => {
+    themeDropdownOpen.value = !themeDropdownOpen.value;
+};
+
+const setTheme = (newTheme) => {
+    theme.value = newTheme;
+    themeDropdownOpen.value = false;
+};
+
+// Computed class for background based on theme
+const backgroundClass = computed(() => {
+    switch (theme.value) {
+        case 'light':
+            return 'bg-gray-50';
+        case 'dark':
+            return 'bg-slate-900';
+        case 'custom':
+        default:
+            return 'bg-gradient-to-b from-cyan-700 to-cyan-500';
+    }
+});
+
+// Computed class for text based on theme
+const textClass = computed(() => {
+    switch (theme.value) {
+        case 'light':
+            return 'text-slate-900';
+        case 'dark':
+            return 'text-white';
+        case 'custom':
+        default:
+            return 'text-slate-900';
+    }
+});
 
 // Dropdown state
 const isDropdownOpen = ref(false);
@@ -40,6 +98,9 @@ const emit = defineEmits(['update:searchTerm']);
 
 // Lê o termo de busca da URL ao carregar o componente
 onMounted(() => {
+    // Carrega o tema do localStorage
+    loadTheme();
+    
     const urlParams = new URLSearchParams(window.location.search);
     const searchFromUrl = urlParams.get('search');
     
@@ -175,7 +236,7 @@ watch(() => showSuggestions.value, () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-b from-cyan-600 to-cyan-500 text-slate-900 font-sans pb-20">
+    <div :class="['min-h-screen', backgroundClass, textClass, 'font-sans', 'pb-20']">
         <!-- ... resto do template ... -->
         <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-6 flex justify-center items-center gap-4 shadow-md">
             <div class="flex items-center gap-2">
@@ -326,6 +387,68 @@ watch(() => showSuggestions.value, () => {
                         <Link v-if="!auth.user" :href="route('client.login')" class="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition">Área do Cliente</Link>
                         <Link v-if="auth.user && auth.user.is_staff" :href="route('dashboard')" class="text-[9px] font-black uppercase tracking-widest text-primary hover:text-white transition font-bold">Painel Admin</Link>
                         <Link v-if="!auth.user" :href="route('login')" class="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition">Painel Admin</Link>
+                    </div>
+
+                    <!-- Theme Toggle Button -->
+                    <div class="relative" ref="themeDropdownRef">
+                        <button 
+                            @click="toggleThemeDropdown"
+                            class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-2xl transition shadow-lg"
+                            title="Alterar tema"
+                        >
+                            <Sun v-if="theme === 'light'" class="w-5 h-5" />
+                            <Moon v-else-if="theme === 'dark'" class="w-5 h-5" />
+                            <Palette v-else class="w-5 h-5" />
+                        </button>
+
+                        <!-- Theme Dropdown -->
+                        <transition
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+                            enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                            leave-active-class="transition duration-150 ease-in"
+                            leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                            leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+                        >
+                            <div 
+                                v-if="themeDropdownOpen"
+                                class="absolute right-0 mt-3 w-48 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 z-[60] overflow-hidden"
+                            >
+                                <div class="px-5 py-3 border-b border-slate-50 mb-2 bg-slate-50/50">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Tema</p>
+                                </div>
+
+                                <button
+                                    @click="setTheme('light')"
+                                    class="w-full flex items-center gap-3 px-5 py-3.5 text-slate-600 hover:bg-slate-50 transition-all group"
+                                >
+                                    <div class="p-2 bg-slate-100 rounded-xl group-hover:bg-yellow-100 transition-colors">
+                                        <Sun class="w-4 h-4 group-hover:text-yellow-600" />
+                                    </div>
+                                    <span class="text-xs font-black uppercase tracking-widest">Claro</span>
+                                </button>
+
+                                <button
+                                    @click="setTheme('dark')"
+                                    class="w-full flex items-center gap-3 px-5 py-3.5 text-slate-600 hover:bg-slate-50 transition-all group"
+                                >
+                                    <div class="p-2 bg-slate-100 rounded-xl group-hover:bg-slate-800 transition-colors">
+                                        <Moon class="w-4 h-4 group-hover:text-white" />
+                                    </div>
+                                    <span class="text-xs font-black uppercase tracking-widest">Escuro</span>
+                                </button>
+
+                                <button
+                                    @click="setTheme('custom')"
+                                    class="w-full flex items-center gap-3 px-5 py-3.5 text-slate-600 hover:bg-slate-50 transition-all group"
+                                >
+                                    <div class="p-2 bg-slate-100 rounded-xl group-hover:bg-cyan-100 transition-colors">
+                                        <Palette class="w-4 h-4 group-hover:text-cyan-600" />
+                                    </div>
+                                    <span class="text-xs font-black uppercase tracking-widest">Personalizado</span>
+                                </button>
+                            </div>
+                        </transition>
                     </div>
 
                     <button class="bg-primary text-white p-3 rounded-2xl hover:bg-primary-hover transition shadow-lg relative shadow-primary/20">

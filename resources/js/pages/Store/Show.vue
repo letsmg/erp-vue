@@ -116,7 +116,7 @@ const formatCurrency = (value) => {
             </div>
         </div>
 
-        <div class="min-h-screen bg-[#FDFDFD] pb-24">
+        <div class="min-h-screen pb-24">
             <div class="max-w-7xl mx-auto px-6 py-8">
                 <Link :href="route('products.index')" class="inline-flex items-center gap-2 text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] transition group">
                     <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
