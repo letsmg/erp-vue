@@ -175,7 +175,7 @@ watch(() => showSuggestions.value, () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gradient-to-b from-red-200 to-red-100 text-slate-900 font-sans pb-20">
+    <div class="min-h-screen bg-gradient-to-b from-cyan-600 to-cyan-500 text-slate-900 font-sans pb-20">
         <!-- ... resto do template ... -->
         <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-6 flex justify-center items-center gap-4 shadow-md">
             <div class="flex items-center gap-2">

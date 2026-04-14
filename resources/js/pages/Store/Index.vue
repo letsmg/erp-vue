@@ -197,7 +197,7 @@ const scroll = (id, direction) => {
             <h1 class="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
                 {{ seoData.h1 }}
             </h1>
-            <p class="text-slate-400 text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em]">
+            <p class="text-white text-[10px] md:text-xs font-black mt-3 uppercase tracking-[0.4em]">
                 {{ seoData.description }}
             </p>
         </header>
