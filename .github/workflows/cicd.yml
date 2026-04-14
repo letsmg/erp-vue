@@ -77,7 +77,7 @@ jobs:
             
             # 5. Comandos Laravel (Rodando como www-data)
             cd ${BASE_DIR}_new
-            sudo -u www-data php artisan migrate:fresh --force
+            sudo -u www-data php artisan migrate --force
             sudo -u www-data php artisan db:seed --force
             sudo -u www-data php artisan optimize
             
