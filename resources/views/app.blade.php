@@ -39,8 +39,9 @@
     <title inertia>{{ config('app.name', 'ERP Vue Laravel') }}</title>
 
     {{-- Favicon --}}
-    <link rel="icon" type="image/x-icon" href="{{ asset('icon.ico') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('icon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ asset('icon.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('icon.png') }}">
 
     @routes
     @inertiaHead

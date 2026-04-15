@@ -25,7 +25,7 @@
 </head>
 <body>
     @php
-        $logoPath = public_path('icon.ico');
+        $logoPath = public_path('icon.png');
         $base64Logo = '';
         if (file_exists($logoPath)) {
             $logoData = file_get_contents($logoPath);
