@@ -18,7 +18,7 @@ class SimpleSanitizationTest extends TestCase
         $data = [
             'name' => '<b>Test</b> User <script>alert("xss")</script>',
             'description' => '<p>Description with <b>HTML</b></p>',
-            'meta_title' => '<script>alert("xss")</script>Meta Title',
+            'title' => '<script>alert("xss")</script>Title',
             'schema_markup' => '<script type="application/ld+json">{"@context": "https://schema.org"}</script>',
             'google_tag_manager' => '<!-- Google Tag Manager --><script>dataLayer = [];</script>',
         ];
@@ -29,8 +29,8 @@ class SimpleSanitizationTest extends TestCase
         // Verifica se os campos foram sanitizados
         $this->assertEquals('Test User ', $sanitized['name']); // Espaço no final é esperado
         $this->assertEquals('Description with HTML', $sanitized['description']);
-        $this->assertEquals('Meta Title', $sanitized['meta_title']);
-        
+        $this->assertEquals('Title', $sanitized['title']);
+
         // Verifica se os campos HTML foram preservados
         $this->assertEquals('<script type="application/ld+json">{"@context": "https://schema.org"}</script>', $sanitized['schema_markup']);
         $this->assertEquals('<!-- Google Tag Manager --><script>dataLayer = [];</script>', $sanitized['google_tag_manager']);
@@ -40,22 +40,16 @@ class SimpleSanitizationTest extends TestCase
     public function seo_sanitization_works()
     {
         $seoData = [
-            'meta_title' => '<script>alert("xss")</script>Meta Title',
             'meta_description' => '<p>Description with <b>HTML</b></p>',
             'schema_markup' => '<script type="application/ld+json">{"@context": "https://schema.org"}</script>',
             'google_tag_manager' => '<!-- Google Tag Manager --><script>dataLayer = [];</script>',
-            'h1' => '<h1>Heading</h1>',
-            'text1' => '<em>Text</em> content',
         ];
 
         $sanitized = \App\Helpers\SanitizerHelper::sanitizeSeoData($seoData);
 
         // Verifica se os campos foram sanitizados
-        $this->assertEquals('Meta Title', $sanitized['meta_title']);
         $this->assertEquals('Description with HTML', $sanitized['meta_description']);
-        $this->assertEquals('Heading', $sanitized['h1']);
-        $this->assertEquals('Text content', $sanitized['text1']);
-        
+
         // Verifica se os campos HTML foram preservados
         $this->assertEquals('<script type="application/ld+json">{"@context": "https://schema.org"}</script>', $sanitized['schema_markup']);
         $this->assertEquals('<!-- Google Tag Manager --><script>dataLayer = [];</script>', $sanitized['google_tag_manager']);

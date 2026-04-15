@@ -113,7 +113,7 @@ class ProductTest extends TestCase
         $response = $this->actingAs($operator)
             ->withSession(['_token' => 'test'])
             ->put('/api/v1/products/' . $product->id, [
-            'description' => 'Descricao Alterada',
+            'title' => 'Titulo Alterado',
             'is_active' => true, // Tentando burlar
             '_token' => 'test',
         ], ['Accept' => 'application/json']);

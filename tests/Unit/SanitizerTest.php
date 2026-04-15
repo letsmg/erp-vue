@@ -31,7 +31,7 @@ class SanitizerTest extends TestCase
     public function it_preserves_specified_fields_from_sanitization()
     {
         $data = [
-            'meta_title' => '<script>alert("xss")</script>Meta Title',
+            'title' => '<script>alert("xss")</script>Title',
             'schema_markup' => '<script type="application/ld+json">{"@context": "https://schema.org"}</script>',
             'google_tag_manager' => '<!-- Google Tag Manager --><script>...</script>',
             'description' => '<p>Normal description</p>',
@@ -39,7 +39,7 @@ class SanitizerTest extends TestCase
 
         $sanitized = SanitizerHelper::sanitize($data, ['schema_markup', 'google_tag_manager']);
 
-        $this->assertEquals('Meta Title', $sanitized['meta_title']);
+        $this->assertEquals('Title', $sanitized['title']);
         $this->assertEquals('<script type="application/ld+json">{"@context": "https://schema.org"}</script>', $sanitized['schema_markup']);
         $this->assertEquals('<!-- Google Tag Manager --><script>...</script>', $sanitized['google_tag_manager']);
         $this->assertEquals('Normal description', $sanitized['description']);
@@ -49,20 +49,16 @@ class SanitizerTest extends TestCase
     public function sanitize_seo_data_preserves_html_fields()
     {
         $seoData = [
-            'meta_title' => '<script>alert("xss")</script>Meta Title',
             'meta_description' => '<p>Description with <b>HTML</b></p>',
             'schema_markup' => '<script type="application/ld+json">{"@context": "https://schema.org"}</script>',
             'google_tag_manager' => '<!-- Google Tag Manager --><script>dataLayer = [];</script>',
-            'h1' => '<h1>Heading</h1>',
         ];
 
         $sanitized = SanitizerHelper::sanitizeSeoData($seoData);
 
-        $this->assertEquals('Meta Title', $sanitized['meta_title']);
         $this->assertEquals('Description with HTML', $sanitized['meta_description']);
         $this->assertEquals('<script type="application/ld+json">{"@context": "https://schema.org"}</script>', $sanitized['schema_markup']);
         $this->assertEquals('<!-- Google Tag Manager --><script>dataLayer = [];</script>', $sanitized['google_tag_manager']);
-        $this->assertEquals('Heading', $sanitized['h1']);
     }
 
     /** @test */

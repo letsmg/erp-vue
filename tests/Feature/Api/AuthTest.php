@@ -25,9 +25,21 @@ class AuthTest extends TestCase
             'password' => 'Password@123',
         ], ['Accept' => 'application/json']);
 
-        // A rota API de login ainda retorna 302 pois usa o controller web
-        // Para usar JWT, precisaria implementar middleware específico
-        $response->assertStatus(302);
+        // A rota API de login retorna 200 com token JWT
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'message' => 'Login realizado com sucesso.',
+            ])
+            ->assertJsonStructure([
+                'data' => [
+                    'token',
+                    'user' => [
+                        'id',
+                        'email',
+                    ],
+                ],
+            ]);
     }
 
     #[Test]
@@ -43,8 +55,12 @@ class AuthTest extends TestCase
             'password' => 'WrongPassword',
         ], ['Accept' => 'application/json']);
 
-        // A rota API de login retorna 302 (redirect) pois usa o controller web
-        $response->assertStatus(302);
+        // A rota API de login retorna 401 para credenciais inválidas
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Credenciais inválidas.',
+            ]);
     }
 
     #[Test]
@@ -61,8 +77,12 @@ class AuthTest extends TestCase
             'password' => 'Password@123',
         ], ['Accept' => 'application/json']);
 
-        // A rota API de login retorna 422 (validation error) pois usa o controller web
-        $response->assertStatus(422);
+        // A rota API de login retorna 401 para conta inativa
+        $response->assertStatus(401)
+            ->assertJson([
+                'success' => false,
+                'message' => 'Conta inativa.',
+            ]);
     }
 
     #[Test]
