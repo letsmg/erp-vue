@@ -47,9 +47,8 @@ class ProductSeeder extends Seeder
                     'seoable_type' => get_class($product),
                 ],
                 [
-                    'meta_description' => "Compre agora " . $product->description . " com as melhores condições.",
-                    'meta_keywords'    => str_replace(' ', ', ', $product->description),
-                    'text1'            => "Descrição detalhada do produto " . $product->description,
+                    'meta_description' => "Compre agora " . $product->title . " com as melhores condições.",
+                    'meta_keywords'    => str_replace(' ', ', ', $product->title),
                 ]
             );
 

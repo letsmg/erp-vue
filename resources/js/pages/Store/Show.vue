@@ -3,7 +3,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import { 
     ArrowLeft, ShoppingCart, Globe, Star, Loader2, 
     Eye, EyeOff, LayoutDashboard, ChevronLeft, ChevronRight,
-    Tag, ShieldCheck, Truck
+    Tag, ShieldCheck, Truck, Heart
 } from 'lucide-vue-next';
 import { computed, ref, watch, inject } from 'vue';
 import StoreLayout from '@/Layouts/StoreLayout.vue';
@@ -30,11 +30,11 @@ const limitMetaTitle = (text) => {
     return text.length > 70 ? text.substring(0, 67) + '...' : text;
 };
 
-// meta_title derivado do product.description (limitado a 70 chars)
-const metaTitle = computed(() => limitMetaTitle(props.product.description));
+// meta_title derivado do product.title (limitado a 70 chars)
+const metaTitle = computed(() => limitMetaTitle(props.product.title));
 
-// h1 derivado do product.description (sem limite)
-const h1Text = computed(() => props.product.description || '');
+// h1 derivado do product.title (sem limite)
+const h1Text = computed(() => props.product.title || '');
 
 // 🖼️ Controle do Carrossel Manual
 const activeImageIndex = ref(0);
@@ -85,6 +85,16 @@ const toggleStatus = () => {
 const formatCurrency = (value) => {
     return Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
+
+const addToCart = (product) => {
+    // TODO: Implementar lógica do carrinho
+    console.log('Adicionar ao carrinho:', product);
+};
+
+const addToWishlist = (product) => {
+    // TODO: Implementar lógica da lista de desejos
+    console.log('Adicionar aos favoritos:', product);
+};
 </script>
 
 <template>
@@ -94,6 +104,19 @@ const formatCurrency = (value) => {
         <meta name="keywords" :content="seoData.meta_keywords" />
         <link rel="slug" :href="seoData.slug_url || page.url" />
         <component v-if="seoData.schema_markup" is="script" type="application/ld+json" v-html="seoData.schema_markup" />
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="product" />
+        <meta property="og:title" :content="metaTitle" />
+        <meta property="og:description" :content="seoData.meta_description" />
+        <meta property="og:url" :content="page.url" />
+        <meta v-if="product.images?.[0]" property="og:image" :content="'/storage/products/' + product.images[0].path" />
+        
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" :content="metaTitle" />
+        <meta name="twitter:description" :content="seoData.meta_description" />
+        <meta v-if="product.images?.[0]" name="twitter:image" :content="'/storage/products/' + product.images[0].path" />
     </Head>
 
     <StoreLayout>
@@ -120,7 +143,7 @@ const formatCurrency = (value) => {
 
         <div class="min-h-screen pb-24">
             <div class="max-w-7xl mx-auto px-6 py-8">
-                <Link :href="route('products.index')" class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition group" :class="theme === 'dark' ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-400 hover:text-indigo-600'">
+                <Link :href="route('store.index')" class="inline-flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em] transition group" :class="theme === 'dark' ? 'text-slate-400 hover:text-indigo-400' : 'text-slate-400 hover:text-indigo-600'">
                     <ArrowLeft class="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> 
                     Voltar para Loja
                 </Link>
@@ -137,6 +160,7 @@ const formatCurrency = (value) => {
 
                             <template v-if="product.images?.length > 0">
                                 <img :key="activeImageIndex" :src="getImageUrl(product.images[activeImageIndex].path)" 
+                                    :alt="product.title"
                                     class="object-contain w-full h-full p-8 transition-all duration-700 animate-in fade-in zoom-in-95" />
                                 
                                 <template v-if="product.images.length > 1">
@@ -156,18 +180,18 @@ const formatCurrency = (value) => {
                                 class="w-16 h-16 shrink-0 rounded-2xl border-2 overflow-hidden p-1 transition-all"
                                 :class="activeImageIndex === index ? 'border-indigo-600 scale-105 shadow-md' : (theme === 'dark' ? 'border-slate-700 opacity-50 hover:opacity-100' : 'border-gray-100 opacity-50 hover:opacity-100')"
                                 :style="activeImageIndex !== index && theme === 'dark' ? 'background-color: #1e293b' : ''">
-                                <img :src="getImageUrl(img.path)" class="w-full h-full object-contain" />
+                                <img :src="getImageUrl(img.path)" :alt="product.title" class="w-full h-full object-contain" />
                             </button>
                         </div>
                     </div>
 
                     <div class="md:col-span-5 flex flex-col pt-2">
-                        <nav class="text-[10px] uppercase font-black text-indigo-500 mb-3 tracking-[0.4em]">
+                        <nav class="text-[12px] uppercase font-black mb-3 tracking-[0.4em]" :class="theme === 'dark' ? 'text-white' : 'text-slate-900'">
                             {{ product.brand }} <span class="mx-2" :class="theme === 'dark' ? 'text-slate-500' : 'text-gray-300'">/</span> {{ product.model }}
                         </nav>
 
                         <h1 class="text-4xl lg:text-5xl font-black mb-6 leading-none tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
-                            {{ seoData.h1 || product.description }}
+                            {{ product.title || h1Text }}
                         </h1>
 
                         <div class="mb-10 flex flex-col">
@@ -183,9 +207,9 @@ const formatCurrency = (value) => {
                             <p class="text-[10px] font-black uppercase mt-2 tracking-widest" :class="theme === 'dark' ? 'text-slate-400' : 'text-gray-400'">Ou 10x sem juros no cartão</p>
                         </div>
 
-                        <div v-if="seoData.text1" class="mb-10 border-l-4 border-indigo-600 pl-6 py-1">
-                            <p class="text-[16px] leading-relaxed font-medium" :class="theme === 'dark' ? 'text-slate-300' : 'text-gray-600'">
-                                {{ seoData.text1 }}
+                        <div v-if="product.description" class="mb-10 border-l-4 border-indigo-600 pl-6 py-1">
+                            <p class="text-[16px] leading-relaxed font-medium text-white">
+                                {{ product.description }}
                             </p>
                         </div>
 
@@ -221,10 +245,10 @@ const formatCurrency = (value) => {
                             Ficha Técnica
                         </div>
                         <h2 class="text-3xl lg:text-4xl font-black uppercase tracking-tighter mb-10" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
-                            {{ seoData.h2 || 'Especificações Completas' }}
+                            {{ product.subtitle || 'Especificações Completas' }}
                         </h2>
-                        <div class="prose prose-indigo max-w-none text-lg leading-relaxed whitespace-pre-line font-medium italic" :class="theme === 'dark' ? 'text-slate-300' : 'text-gray-600'">
-                            {{ seoData.text2 || 'O fabricante não disponibilizou detalhes técnicos adicionais para este modelo.' }}
+                        <div class="prose prose-indigo max-w-none text-lg leading-relaxed whitespace-pre-line font-medium italic text-white">
+                            {{ product.features || 'O fabricante não disponibilizou detalhes técnicos adicionais para este modelo.' }}
                         </div>
                     </div>
                 </section>
@@ -233,22 +257,53 @@ const formatCurrency = (value) => {
                     <div class="flex items-center justify-between mb-12">
                         <h3 class="text-2xl font-black uppercase tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">Quem viu, gostou também</h3>
                         <div class="flex-1 h-px mx-8" :class="theme === 'dark' ? 'bg-slate-700' : 'bg-gray-100'"></div>
-                        <Link :href="route('products.index')" class="text-[10px] font-black uppercase tracking-widest hover-underline" :class="theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'">Ver Tudo</Link>
+                        <Link :href="route('store.index')" class="text-[10px] font-black uppercase tracking-widest hover-underline" :class="theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'">Ver Tudo</Link>
                     </div>
 
-                    <div v-if="relatedProducts?.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                        <div v-for="item in relatedProducts" :key="item.id" class="group">
-                            <Link :href="route('products.preview', item.id)" class="block">
-                                <div class="aspect-square rounded-[2.5rem] border overflow-hidden mb-5 flex items-center justify-center p-8 group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2 relative" :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-100'">
-                                    <img v-if="item.images?.length > 0" 
-                                         :src="getImageUrl(item.images[0].path)" 
-                                         class="max-w-full max-h-full object-contain group-hover:scale-110 transition duration-500" />
-                                    <Globe v-else class="w-12 h-12 text-gray-100" />
+                    <div v-if="relatedProducts?.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+                        <Link 
+                            v-for="product in relatedProducts" 
+                            :key="product.slug + '-' + product.id"
+                            :href="route('store.product', product.slug)"
+                            class="group p-5 rounded-[2.5rem] md:rounded-[3.5rem] border shadow-sm hover:shadow-2xl transition-all duration-700 block"
+                            :class="theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-white'"
+                        >
+                            <div class="relative aspect-[4/5] rounded-[2rem] md:rounded-[2.8rem] overflow-hidden bg-blue-100 mb-6">
+                                <img 
+                                    v-if="product.images?.length > 0"
+                                    :src="getImageUrl(product.images[0].path)" 
+                                    :alt="product.title"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                                />
+                                <Globe v-else class="w-16 h-16 text-gray-300 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                            </div>
+                            <div class="space-y-2">
+                                <h3 class="text-[11px] md:text-xs font-black uppercase tracking-tight leading-tight line-clamp-2" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
+                                    {{ product.title }}
+                                </h3>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm md:text-2xl font-black font-mono tracking-tighter" :class="theme === 'dark' ? 'text-indigo-400' : 'text-primary'">
+                                        R$ {{ product.sale_price }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <button 
+                                            @click.prevent="addToWishlist(product)"
+                                            class="p-2 rounded-xl transition-all hover:scale-110"
+                                            :class="theme === 'dark' ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-400'"
+                                        >
+                                            <Heart class="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            @click.prevent="addToCart(product)"
+                                            class="p-2 rounded-xl transition-all hover:scale-110"
+                                            :class="theme === 'dark' ? 'hover:bg-slate-700 text-slate-400' : 'hover:bg-gray-100 text-gray-400'"
+                                        >
+                                            <ShoppingCart class="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
-                                <p class="text-[11px] font-black uppercase tracking-tight truncate px-2" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">{{ item.description }}</p>
-                                <div class="text-sm font-black mt-1 px-2" :class="theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'">{{ formatCurrency(item.sale_price) }}</div>
-                            </Link>
-                        </div>
+                            </div>
+                        </Link>
                     </div>
                 </section>
             </main>

@@ -10,9 +10,8 @@ class Seo extends Model
     protected $table = 'seo';
 
     protected $fillable = [
-        'meta_description', 'meta_keywords', 
-        'text1', 'h2', 'text2', 
-        'schema_markup', 'google_tag_manager', 
+        'meta_description', 'meta_keywords',
+        'schema_markup', 'google_tag_manager',
         'seoable_id', 'seoable_type'
     ];
 
@@ -59,28 +58,13 @@ class Seo extends Model
     }
 
     /**
-     * h1 é derivado do description do produto
-     * Acessado via $product->description no frontend
+     * h1 é derivado do title do produto
+     * Acessado via $product->title no frontend
      */
     public function getH1Attribute($value)
     {
-        // Retorna vazio - o frontend deve usar product->description
+        // Retorna vazio - o frontend deve usar product->title
         return null;
-    }
-
-    public function getH2Attribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-    }
-
-    public function getText1Attribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-    }
-
-    public function getText2Attribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 
     public function getSlugAttribute($value)

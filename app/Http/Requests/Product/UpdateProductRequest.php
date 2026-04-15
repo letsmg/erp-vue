@@ -16,7 +16,10 @@ class UpdateProductRequest extends FormRequest
         return [
             // Dados Básicos
             'supplier_id'     => 'required|exists:suppliers,id',
-            'description'     => 'required|string|max:255',            
+            'title'           => 'required|string|max:150',
+            'subtitle'        => 'nullable|string|max:200',
+            'description'     => 'nullable|string',
+            'features'        => 'nullable|string',
             'brand'           => 'required|nullable|string|max:100',
             'category_id'     => 'required','exists:categories,id',
             'model'           => 'required|nullable|string|max:100',
@@ -34,7 +37,7 @@ class UpdateProductRequest extends FormRequest
             'promo_price'    => 'nullable|numeric|min:0',
             'promo_start_at' => 'nullable|date',
             'promo_end_at'   => 'nullable|date|after_or_equal:promo_start_at',
-            
+
             // Status e Logística (Dica: use nullable para campos que podem vir vazios)
             'weight' => 'required|numeric|min:0',
             'width'  => 'required|numeric|min:0',
@@ -45,12 +48,9 @@ class UpdateProductRequest extends FormRequest
 
             // SEO & Conteúdo (Sincronizado com seu novo Layout)
             'meta_description'  => 'required|string|max:160',
-            'meta_keywords'     => 'required|string', 
+            'meta_keywords'     => 'required|string',
             'slug'              => 'required|string', // Alterado de url para string para evitar erros de prefixo
-           
-            'text1'             => 'required|string',
-            'h2'                => 'nullable|string',
-            'text2'             => 'nullable|string',
+
             'schema_markup'     => 'nullable|string',
             'google_tag_manager'=> 'nullable|string',            
 
@@ -72,8 +72,8 @@ class UpdateProductRequest extends FormRequest
             'supplier_id.required' => 'Selecione um fornecedor para este produto.',
             'supplier_id.exists'   => 'O fornecedor selecionado é inválido.',
             'category_id.exists'   => 'A categoria é obrigatória.',
-            'description.required' => 'A descrição do produto é obrigatória.',
-            'description.max'      => 'A descrição não deve ultrapassar 255 caracteres.',
+            'title.required' => 'O título do produto é obrigatório.',
+            'title.max'      => 'O título não deve ultrapassar 150 caracteres.',
             'cost_price.required'  => 'Informe o preço de custo.',
             'sale_price.required'  => 'Informe o preço de venda.',
             'stock_quantity.required' => 'Informe a quantidade em estoque.',

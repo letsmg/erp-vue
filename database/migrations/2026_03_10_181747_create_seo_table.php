@@ -19,12 +19,8 @@ return new class extends Migration
             $table->string('seoable_type');
             
             // SEO Fields
-            // meta_title e h1 são derivados do product->description (limitado a 70 chars)
             $table->string('meta_description', 160);
-            $table->string('meta_keywords');                        
-            $table->text('text1');      
-            $table->string('h2')->nullable();
-            $table->text('text2')->nullable();
+            $table->string('meta_keywords');
             $table->text('schema_markup')->nullable();
             $table->text('google_tag_manager')->nullable();                        
             $table->timestamps();

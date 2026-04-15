@@ -196,7 +196,7 @@ class ProductRepository
         $data['is_active'] = ($user && $user->access_level == 1);
 
         // 3. Criamos uma lista com os campos que pertencem à tabela 'seos'
-        $seoFields = ['meta_title', 'meta_description', 'meta_keywords', 'h1', 'text1'];
+        $seoFields = ['meta_description', 'meta_keywords'];
         
         // 4. O SEGREDO: Criamos um array excluindo os campos de SEO
         // Isso evita que o SQL tente inserir 'meta_title' na tabela 'products'

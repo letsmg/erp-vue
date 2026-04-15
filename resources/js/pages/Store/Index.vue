@@ -190,6 +190,17 @@ const scroll = (id, direction) => {
         <Head>
             <title>{{ seoData.title }}</title>
             <meta name="description" :content="seoData.description" />
+            
+            <!-- Open Graph / Facebook -->
+            <meta property="og:type" content="website" />
+            <meta property="og:title" :content="seoData.title" />
+            <meta property="og:description" :content="seoData.description" />
+            <meta property="og:url" :content="page.props.url" />
+            
+            <!-- Twitter -->
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" :content="seoData.title" />
+            <meta name="twitter:description" :content="seoData.description" />
         </Head>
 
         <header class="max-w-7xl mx-auto px-4 md:px-6 pt-10">
@@ -302,7 +313,7 @@ const scroll = (id, direction) => {
                                     : 'https://placehold.co/600x800'" 
                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 lazyload"
                                 loading="lazy"
-                                :alt="product.description"
+                                :alt="product.title"
                             />
 
                             <div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
@@ -314,7 +325,7 @@ const scroll = (id, direction) => {
 
                         <div class="px-3">
                             <h3 class="text-xs md:text-sm font-black uppercase truncate tracking-tight" :class="theme === 'dark' ? 'text-white' : 'text-slate-800'">
-                                {{ product.description }}
+                                {{ product.title }}
                             </h3>
 
                             <div class="flex items-center justify-between mt-2">

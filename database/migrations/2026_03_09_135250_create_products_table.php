@@ -13,7 +13,10 @@ return new class extends Migration {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
-            $table->string('description', 150);
+            $table->string('title', 150);
+            $table->string('subtitle', 200)->nullable();
+            $table->text('description')->nullable();
+            $table->text('features')->nullable();
             $table->string('brand', 100)->nullable();
             $table->string('model', 100)->nullable();
             $table->string('size', 20)->nullable();
@@ -54,7 +57,7 @@ return new class extends Migration {
             $table->index('is_active');
             $table->index('is_featured');
             $table->index('created_at');
-            $table->fullText(['description', 'brand', 'model']);
+            $table->fullText(['title', 'description', 'brand', 'model']);
             $table->index(['is_active', 'sale_price']); // Índice composto para a vitrine
             $table->index('promo_price');
         });

@@ -16,7 +16,10 @@ class StoreProductRequest extends FormRequest
         return [
             // Dados Básicos
             'supplier_id'     => 'required|exists:suppliers,id',
-            'description'     => 'required|string|max:255',            
+            'title'           => 'required|string|max:150',
+            'subtitle'        => 'nullable|string|max:200',
+            'description'     => 'nullable|string',
+            'features'        => 'nullable|string',
             'brand'           => 'required|nullable|string|max:100',
             'category_id'     => 'required','exists:categories,id',
             'model'           => 'required|nullable|string|max:100',
@@ -42,14 +45,10 @@ class StoreProductRequest extends FormRequest
             'length' => 'required|numeric|min:0',
             'length'          => 'required|numeric|min:1',
             'free_shipping'   => 'boolean',
-            
+
             // Marketing & SEO
-            // meta_title e h1 são derivados do product->description (usados no frontend)
             'meta_description'  => 'required|string|max:160',
-            'meta_keywords'     => 'required|string',            
-            'text1'             => 'required|string',
-            'h2'                => 'nullable|string',
-            'text2'             => 'nullable|string',
+            'meta_keywords'     => 'required|string',
             'schema_markup'     => 'nullable|string',
             'google_tag_manager'=> 'nullable|string',            
             
@@ -67,8 +66,8 @@ class StoreProductRequest extends FormRequest
             'supplier_id.required' => 'Selecione um fornecedor para este produto.',
             'supplier_id.exists'   => 'O fornecedor selecionado é inválido.',
             'category_id.exists'          => 'A categoria é obrigatória.',
-            'description.required' => 'A descrição do produto é obrigatória.',
-            'description.max'      => 'A descrição não deve ultrapassar 255 caracteres.',
+            'title.required' => 'O título do produto é obrigatório.',
+            'title.max'      => 'O título não deve ultrapassar 150 caracteres.',
             'cost_price.required'  => 'Informe o preço de custo.',
             'sale_price.required'  => 'Informe o preço de venda.',
             'stock_quantity.required' => 'Informe a quantidade em estoque.',
