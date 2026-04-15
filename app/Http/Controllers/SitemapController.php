@@ -13,18 +13,35 @@ class SitemapController extends Controller
         // Cria o objeto do Sitemap
         $sitemap = Sitemap::create();
 
-        // Adiciona a página inicial
-        $sitemap->add(Url::create('/')->setPriority(1.0));
+        // Adiciona a página inicial da loja
+        $sitemap->add(Url::create('/')
+            ->setPriority(1.0)
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_DAILY));
 
-        // Adiciona todos os produtos ativos do seu banco
+        // Adiciona página de login de cliente
+        $sitemap->add(Url::create('/login')
+            ->setPriority(0.8)
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
+
+        // Adiciona página de registro de cliente
+        $sitemap->add(Url::create('/cliente/registrar')
+            ->setPriority(0.7)
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
+
+        // Adiciona página de esqueci senha do cliente
+        $sitemap->add(Url::create('/cliente/esqueci-senha')
+            ->setPriority(0.6)
+            ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY));
+
+        // Adiciona todos os produtos ativos da loja
         $products = Product::where('is_active', true)->get();
 
         foreach ($products as $product) {
             $sitemap->add(
-                Url::create("/products/{$product->slug}")
+                Url::create("/store/product/{$product->slug}")
                     ->setLastModificationDate($product->updated_at)
                     ->setChangeFrequency(Url::CHANGE_FREQUENCY_WEEKLY)
-                    ->setPriority(0.8)
+                    ->setPriority(0.9)
             );
         }
 

@@ -1,2 +1,14 @@
 User-agent: *
-Disallow:
+Disallow: /dashboard
+Disallow: /products
+Disallow: /suppliers
+Disallow: /reports
+Disallow: /users
+Disallow: /clients
+Disallow: /cliente
+Disallow: /search
+Disallow: /redis
+Disallow: /admin
+Disallow: /api/
+Allow: /
+Sitemap: https://127.0.0.1:8000/sitemap.xml
