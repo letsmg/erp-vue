@@ -9,16 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4 # Baixa o código do seu repositório na máquina do GitHub
+        uses: actions/checkout@v4 # Baixa o código do seu repositório para o ambiente do GitHub Actions
 
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          [cite_start]php-version: '8.3' # Configura o ambiente PHP necessário para o Laravel [cite: 32]
+          php-version: '8.3' # Versão estável do PHP para o Laravel
           extensions: mbstring, bcmath, gd, zip, pgsql, pdo_sqlite
+          coverage: none
 
       - name: 📦 Install Composer
-        run: composer install --no-dev --optimize-autoloader --no-interaction # Instala apenas dependências de produção
+        run: composer install --no-dev --optimize-autoloader --no-interaction # Dependências de produção apenas
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -29,7 +30,7 @@ jobs:
       - name: 🔨 Build Assets (Vite/TS)
         run: |
           npm install
-          npm run build # Gera os arquivos em public/build, corrigindo o erro "u is null" [cite: 82]
+          npm run build # Gera public/build. Essencial para evitar o erro "u is null" no Vue
 
       - name: 🤐 Criar Pacote de Deploy
         run: zip -r deploy.zip . -x ".git/*" "node_modules/*" ".github/*" "tests/*" ".env*" "storage/*"
@@ -37,19 +38,19 @@ jobs:
       - name: 🔑 Configure SSH
         uses: shimataro/ssh-key-action@v2
         with:
-          [cite_start]key: ${{ secrets.SSH_PRIVATE_KEY }} # Usa sua chave privada para acesso seguro [cite: 83]
-          [cite_start]known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }} # Valida a identidade do servidor [cite: 168]
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }} # Evita ataques Man-in-the-Middle
 
       - name: 🚀 Deploy Atômico
         run: |
           PROJECT_NAME="erp-vue"
-          # Envia o pacote para o diretório temporário do servidor
+          # Sincroniza o pacote zipado para a pasta temporária do servidor
           scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}-deploy.zip
 
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e # Interrompe o script se qualquer comando falhar
+            set -e # Aborta o script se houver qualquer erro em qualquer linha abaixo
 
-            # CONFIGURAÇÃO DE VARIÁVEIS DE CAMINHO
+            # CONFIGURAÇÃO DE CAMINHOS
             PROJECT="erp-vue"
             BASE_PATH="/var/www/$PROJECT"
             SHARED_PATH="${BASE_PATH}/shared"
@@ -57,44 +58,47 @@ jobs:
             RELEASES_PATH="${BASE_PATH}/releases"
             NEW_RELEASE="${RELEASES_PATH}/$(date +%Y%m%d%H%M%S)"
             
-            # 1. GARANTIR ESTRUTURA DE PASTAS COMPARTILHADAS
-            # O storage é mantido em 'shared' para não perder uploads entre deploys [cite: 82]
+            # 1. GARANTIR ESTRUTURA PERSISTENTE
+            # Criamos pastas em 'shared' para arquivos que NÃO mudam entre deploys
             sudo mkdir -p ${SHARED_PATH}/storage/app/public
             sudo mkdir -p ${SHARED_PATH}/storage/framework/{cache,sessions,views}
             sudo mkdir -p ${SHARED_PATH}/storage/logs
             
-            # 2. PREPARAR NOVA RELEASE
+            # 2. PREPARAR NOVA VERSÃO
             sudo mkdir -p ${NEW_RELEASE}
             sudo unzip -o /tmp/${PROJECT}-deploy.zip -d ${NEW_RELEASE}
             
-            # 3. VINCULAR ARQUIVOS PERSISTENTES (LINKS SIMBÓLICOS)
-            # Conecta a nova pasta ao .env e storage centralizados [cite: 13, 82]
+            # 3. CONECTAR ARQUIVOS VIA LINKS SIMBÓLICOS (SYMLINKS)
+            # O Laravel na pasta nova vai "enxergar" o .env e o storage da pasta shared
             sudo ln -sfn ${SHARED_PATH}/.env ${NEW_RELEASE}/.env
             sudo rm -rf ${NEW_RELEASE}/storage
             sudo ln -sfn ${SHARED_PATH}/storage ${NEW_RELEASE}/storage
             
-            # 4. AJUSTAR PERMISSÕES (CORREÇÃO ERRO 500)
-            # Garante que o Nginx/PHP (www-data) possa ler o .env e escrever no storage [cite: 82]
+            # 4. AJUSTAR PERMISSÕES DE DONO (CORREÇÃO ERRO 500)
+            # www-data é o usuário do Nginx/PHP-FPM. Ele precisa ser o dono para ler/escrever.
             sudo chown -R www-data:www-data ${NEW_RELEASE}
             sudo chown -R www-data:www-data ${SHARED_PATH}/storage
             
-            # 5. LINK DE STORAGE PÚBLICO (CORREÇÃO ERRO 404 ICON)
-            # Torna os arquivos de /storage/app/public acessíveis via URL [cite: 82]
+            # 5. LINK DE ACESSO PÚBLICO AO STORAGE (CORREÇÃO ERRO 404 ICON)
+            # Permite que o navegador acesse arquivos de upload/ícones via URL
             sudo rm -rf ${NEW_RELEASE}/public/storage
             sudo ln -sfn ${SHARED_PATH}/storage/app/public ${NEW_RELEASE}/public/storage
             
-            # 6. COMANDOS PÓS-DEPLOY DO LARAVEL
+            # 6. COMANDOS INTERNOS DO LARAVEL
             cd ${NEW_RELEASE}
-            sudo -u www-data php artisan migrate --force # Atualiza o banco de dados
-            [cite_start]sudo -u www-data php artisan optimize # Limpa caches antigos e otimiza a performance [cite: 82]
+            sudo -u www-data php artisan migrate --force # Roda migrations sem pedir confirmação
+            sudo -u www-data php artisan optimize # Limpa caches e gera arquivos de rota/config otimizados
             
-            # 7. SWAP ATÔMICO (ATIVAÇÃO)
-            # Muda o link 'current' para a nova pasta instantaneamente [cite: 82]
+            # 7. O PULO DO GATO: SWAP ATÔMICO
+            # Altera o atalho 'current' para a nova pasta. O site atualiza em milissegundos.
             sudo ln -sfn ${NEW_RELEASE} ${LIVE_LINK}
             
-            # 8. LIMPEZA E REINICIALIZAÇÃO
-            sudo systemctl restart php8.3-fpm # Recarrega o PHP com o novo código
+            # 8. REINICIALIZAÇÃO E LIMPEZA
+            sudo systemctl restart php8.3-fpm # Limpa cache do OPcache do PHP
             sudo rm /tmp/${PROJECT}-deploy.zip
+            
+            # Opcional: Manter apenas as últimas 5 versões para economizar espaço
+            cd ${RELEASES_PATH} && sudo ls -1tr | head -n -5 | xargs -d '\n' rm -rf --
             
             echo "✅ Deploy atômico finalizado com sucesso!"
           EOF
