@@ -15,7 +15,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, bcmath, gd, zip, pgsql
+          extensions: mbstring, bcmath, gd, zip, pgsql, pdo_sqlite
 
       - name: 📦 Install Composer
         run: composer install --no-dev --optimize-autoloader --no-interaction
@@ -48,12 +48,13 @@ jobs:
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
             
-            # CONFIGURAÇÃO DE VARIÁVEIS COM HÍFEN
+            # CONFIGURAÇÃO DE VARIÁVEIS
             PROJECT="erp-vue"
             BASE_PATH="/var/www/$PROJECT"
-            SHARED_PATH="${BASE_PATH}-shared"
-            LIVE_LINK="${BASE_PATH}-current"
-            NEW_RELEASE="${BASE_PATH}-releases"
+            SHARED_PATH="${BASE_PATH}/shared"
+            LIVE_LINK="${BASE_PATH}/current"
+            RELEASES_PATH="${BASE_PATH}/releases"
+            NEW_RELEASE="${RELEASES_PATH}/$(date +%Y%m%d%H%M%S)"
             
             # 1. Preparar estrutura inicial se não existir
             sudo mkdir -p ${SHARED_PATH}/storage/app/public
