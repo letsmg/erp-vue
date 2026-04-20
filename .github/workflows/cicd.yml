@@ -88,6 +88,7 @@ jobs:
             cd ${NEW_RELEASE}
             sudo -u www-data php artisan migrate --force # Roda migrations sem pedir confirmação
             sudo -u www-data php artisan optimize # Limpa caches e gera arquivos de rota/config otimizados
+            sudo -u www-data php artisan app:sync-product-images # Verifica e baixa imagens de produtos ausentes
             
             # 7. O PULO DO GATO: SWAP ATÔMICO
             # Altera o atalho 'current' para a nova pasta. O site atualiza em milissegundos.
