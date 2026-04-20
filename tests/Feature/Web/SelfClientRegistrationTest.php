@@ -86,12 +86,8 @@ class SelfClientRegistrationTest extends TestCase
 
         $response = $this->post(route('client.register.post'), $data);
 
-        // Check if response has validation errors (either in session or redirect with errors)
-        $this->assertTrue(
-            $response->hasSession('errors') ||
-            $response->getSession()->has('errors') ||
-            $response->getStatusCode() === 302
-        );
+        // Check for validation errors in session
+        $response->assertSessionHasErrors(['state_registration']);
     }
 
     #[Test]

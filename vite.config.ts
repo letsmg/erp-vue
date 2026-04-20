@@ -26,11 +26,10 @@ export default defineConfig({
                 },
             },
         }),
-        wayfinder({
-            formVariants: true,
-            // Desativado para não travar o build no servidor
-            generateOnRun: false, 
-        }),
+        // wayfinder({
+        //     formVariants: true,
+        //     generateOnRun: false,
+        // }),
     ],
     resolve: {
         alias: {
