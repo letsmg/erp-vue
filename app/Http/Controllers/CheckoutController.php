@@ -118,9 +118,9 @@ class CheckoutController extends Controller
             $preferenceData = [
                 'items' => $items,
                 'back_urls' => [
-                    'success' => route('checkout.success', ['sale_id' => $sale->id]),
-                    'failure' => route('checkout.failure', ['sale_id' => $sale->id]),
-                    'pending' => route('checkout.pending', ['sale_id' => $sale->id]),
+                    'success' => route('checkout.success', ['saleId' => $sale->id]),
+                    'failure' => route('checkout.failure', ['saleId' => $sale->id]),
+                    'pending' => route('checkout.pending', ['saleId' => $sale->id]),
                 ],
                 'auto_return' => 'approved',
                 'external_reference' => $sale->id,
@@ -167,7 +167,7 @@ class CheckoutController extends Controller
     /**
      * Página de sucesso
      */
-    public function success(Request $request, int $saleId)
+    public function checkoutSuccess(Request $request, int $saleId)
     {
         return inertia('Checkout/Success', ['sale_id' => $saleId]);
     }

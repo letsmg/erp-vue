@@ -226,7 +226,7 @@ Route::middleware(['auth', 'client'])->prefix('checkout')->name('checkout.')->gr
 });
 
 Route::prefix('checkout')->name('checkout.')->group(function () {
-    Route::get('/sucesso/{saleId}', [CheckoutController::class, 'success'])->name('success');
+    Route::get('/sucesso/{saleId}', [CheckoutController::class, 'checkoutSuccess'])->name('success');
     Route::get('/falha/{saleId}', [CheckoutController::class, 'failure'])->name('failure');
     Route::get('/pendente/{saleId}', [CheckoutController::class, 'pending'])->name('pending');
     Route::post('/webhook', [CheckoutController::class, 'webhook'])->name('webhook');

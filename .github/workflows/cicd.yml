@@ -2,23 +2,23 @@ name: 🚀 Build & Deploy ERP Vue (Atômico)
 
 on:
   push:
-    branches: [main]
+    branches: [main] # Dispara o deploy automaticamente ao enviar código para a branch main
 
 jobs:
   build-and-pack:
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Baixa o código do seu repositório na máquina do GitHub
 
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          [cite_start]php-version: '8.3' # Configura o ambiente PHP necessário para o Laravel [cite: 32]
           extensions: mbstring, bcmath, gd, zip, pgsql, pdo_sqlite
 
       - name: 📦 Install Composer
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+        run: composer install --no-dev --optimize-autoloader --no-interaction # Instala apenas dependências de produção
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -29,7 +29,7 @@ jobs:
       - name: 🔨 Build Assets (Vite/TS)
         run: |
           npm install
-          npm run build
+          npm run build # Gera os arquivos em public/build, corrigindo o erro "u is null" [cite: 82]
 
       - name: 🤐 Criar Pacote de Deploy
         run: zip -r deploy.zip . -x ".git/*" "node_modules/*" ".github/*" "tests/*" ".env*" "storage/*"
@@ -37,18 +37,19 @@ jobs:
       - name: 🔑 Configure SSH
         uses: shimataro/ssh-key-action@v2
         with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          [cite_start]key: ${{ secrets.SSH_PRIVATE_KEY }} # Usa sua chave privada para acesso seguro [cite: 83]
+          [cite_start]known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }} # Valida a identidade do servidor [cite: 168]
 
       - name: 🚀 Deploy Atômico
         run: |
           PROJECT_NAME="erp-vue"
+          # Envia o pacote para o diretório temporário do servidor
           scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}-deploy.zip
 
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
-            set -e
-            
-            # CONFIGURAÇÃO DE VARIÁVEIS
+            set -e # Interrompe o script se qualquer comando falhar
+
+            # CONFIGURAÇÃO DE VARIÁVEIS DE CAMINHO
             PROJECT="erp-vue"
             BASE_PATH="/var/www/$PROJECT"
             SHARED_PATH="${BASE_PATH}/shared"
@@ -56,42 +57,44 @@ jobs:
             RELEASES_PATH="${BASE_PATH}/releases"
             NEW_RELEASE="${RELEASES_PATH}/$(date +%Y%m%d%H%M%S)"
             
-            # 1. Preparar estrutura inicial se não existir
+            # 1. GARANTIR ESTRUTURA DE PASTAS COMPARTILHADAS
+            # O storage é mantido em 'shared' para não perder uploads entre deploys [cite: 82]
             sudo mkdir -p ${SHARED_PATH}/storage/app/public
-            sudo mkdir -p ${SHARED_PATH}/storage/framework/cache
-            sudo mkdir -p ${SHARED_PATH}/storage/framework/sessions
-            sudo mkdir -p ${SHARED_PATH}/storage/framework/views
+            sudo mkdir -p ${SHARED_PATH}/storage/framework/{cache,sessions,views}
             sudo mkdir -p ${SHARED_PATH}/storage/logs
             
-            # 2. Limpar e descompactar nova versão
-            sudo rm -rf ${NEW_RELEASE}
+            # 2. PREPARAR NOVA RELEASE
             sudo mkdir -p ${NEW_RELEASE}
             sudo unzip -o /tmp/${PROJECT}-deploy.zip -d ${NEW_RELEASE}
             
-            # 3. Vincular arquivos persistentes (Shared)
+            # 3. VINCULAR ARQUIVOS PERSISTENTES (LINKS SIMBÓLICOS)
+            # Conecta a nova pasta ao .env e storage centralizados [cite: 13, 82]
             sudo ln -sfn ${SHARED_PATH}/.env ${NEW_RELEASE}/.env
             sudo rm -rf ${NEW_RELEASE}/storage
             sudo ln -sfn ${SHARED_PATH}/storage ${NEW_RELEASE}/storage
             
-            # 4. Ajustar permissões para o Nginx
+            # 4. AJUSTAR PERMISSÕES (CORREÇÃO ERRO 500)
+            # Garante que o Nginx/PHP (www-data) possa ler o .env e escrever no storage [cite: 82]
             sudo chown -R www-data:www-data ${NEW_RELEASE}
             sudo chown -R www-data:www-data ${SHARED_PATH}/storage
             
-            # 5. Link de Storage Público
+            # 5. LINK DE STORAGE PÚBLICO (CORREÇÃO ERRO 404 ICON)
+            # Torna os arquivos de /storage/app/public acessíveis via URL [cite: 82]
             sudo rm -rf ${NEW_RELEASE}/public/storage
             sudo ln -sfn ${SHARED_PATH}/storage/app/public ${NEW_RELEASE}/public/storage
             
-            # 6. Comandos Laravel pós-deploy
+            # 6. COMANDOS PÓS-DEPLOY DO LARAVEL
             cd ${NEW_RELEASE}
-            sudo -u www-data php artisan migrate --force
-            sudo -u www-data php artisan optimize
+            sudo -u www-data php artisan migrate --force # Atualiza o banco de dados
+            [cite_start]sudo -u www-data php artisan optimize # Limpa caches antigos e otimiza a performance [cite: 82]
             
-            # 7. SWAP ATÔMICO (Ativação)
+            # 7. SWAP ATÔMICO (ATIVAÇÃO)
+            # Muda o link 'current' para a nova pasta instantaneamente [cite: 82]
             sudo ln -sfn ${NEW_RELEASE} ${LIVE_LINK}
             
-            # 8. Finalização
-            sudo systemctl restart php8.3-fpm
+            # 8. LIMPEZA E REINICIALIZAÇÃO
+            sudo systemctl restart php8.3-fpm # Recarrega o PHP com o novo código
             sudo rm /tmp/${PROJECT}-deploy.zip
             
-            echo "✅ Deploy de $PROJECT finalizado com sucesso no padrão de hifens!"
+            echo "✅ Deploy atômico finalizado com sucesso!"
           EOF
