@@ -1,4 +1,4 @@
-name: 🚀 Build & Deploy ERP Modular (Atômico)
+name: 🚀 Build & Deploy ERP Vue (Atômico)
 
 on:
   push:
@@ -49,7 +49,7 @@ jobs:
             set -e
             
             # CONFIGURAÇÃO DE VARIÁVEIS COM HÍFEN
-            PROJECT="erp-modular"
+            PROJECT="erp-vue"
             BASE_PATH="/var/www/$PROJECT"
             SHARED_PATH="${BASE_PATH}-shared"
             LIVE_LINK="${BASE_PATH}-live"
