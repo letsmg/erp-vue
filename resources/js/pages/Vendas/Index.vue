@@ -2,9 +2,9 @@
 import { Head, Link } from '@inertiajs/vue3'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import AdminLayout from '@/Layouts/AdminLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
-defineOptions({ layout: AdminLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const sales = ref<any[]>([])
 const loading = ref(true)
