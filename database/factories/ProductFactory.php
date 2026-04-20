@@ -34,6 +34,13 @@ class ProductFactory extends Factory
             'width'          => $this->faker->numberBetween(10, 100),
             'height'         => $this->faker->numberBetween(10, 100),
             'length'         => $this->faker->numberBetween(10, 100),
+            'free_shipping'  => $this->faker->boolean(20),
+            'promo_price'    => $this->faker->randomFloat(2, 100, 400),
+            'promo_start_at' => $this->faker->dateTimeBetween('-1 month', '+1 month'),
+            'promo_end_at'   => $this->faker->dateTimeBetween('+1 week', '+2 months'),
+            'slug'           => function (array $attributes) {
+                return \Illuminate\Support\Str::slug($attributes['title']);
+            },
         ];
     }
 

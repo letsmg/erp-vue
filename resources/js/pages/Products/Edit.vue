@@ -3,9 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import { useProductEdit } from './useProductEdit';
+import { onMounted, onUnmounted } from 'vue';
 import { 
     Save, ArrowLeft, DollarSign, Camera, X, Code, 
-    Search, FileText, Truck
+    Search, FileText, Truck, Sparkles, X as ClearIcon
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -33,6 +34,95 @@ const dragOptions = {
     ghostClass: "opacity-30", 
     dragClass: "rotate-2" 
 };
+
+// Auto-fill functions for edit form
+const fillTestForm = () => {
+    form.description = 'Produto de Teste Editado ' + Math.floor(Math.random() * 1000);
+    form.barcode = '789' + Math.floor(Math.random() * 10000000000);
+    form.brand = 'Marca Teste';
+    form.model = 'Modelo ' + Math.floor(Math.random() * 100);
+    form.collection = 'Coleção ' + Math.random().toString(36).substring(7).toUpperCase();
+    form.size = 'M';
+    form.gender = 'Unissex';
+    form.stock_quantity = Math.floor(Math.random() * 100);
+    form.cost_price = (Math.random() * 100).toFixed(2);
+    form.sale_price = (Math.random() * 200).toFixed(2);
+    form.weight = (Math.random() * 5).toFixed(3);
+    form.width = (Math.random() * 50).toFixed(2);
+    form.height = (Math.random() * 50).toFixed(2);
+    form.length = (Math.random() * 50).toFixed(2);
+    form.meta_description = 'Descrição de teste para SEO';
+    form.h2 = 'Subtítulo de teste';
+    form.text1 = 'Texto de apresentação de teste';
+    form.text2 = 'Texto detalhado de teste';
+};
+
+const clearCurrentForm = () => {
+    form.description = '';
+    form.barcode = '';
+    form.brand = '';
+    form.model = '';
+    form.collection = '';
+    form.size = '';
+    form.gender = 'Unissex';
+    form.stock_quantity = 0;
+    form.cost_price = 0;
+    form.sale_price = 0;
+    form.promo_price = null;
+    form.promo_start_at = '';
+    form.promo_end_at = '';
+    form.weight = 0;
+    form.width = 0;
+    form.height = 0;
+    form.length = 0;
+    form.free_shipping = false;
+    form.meta_description = '';
+    form.h2 = '';
+    form.text1 = '';
+    form.text2 = '';
+    form.meta_keywords = [];
+    form.clearErrors();
+};
+
+const handleShortcut = (e) => {
+    const isNumpad = e.location === 3 || e.code.startsWith('Numpad');
+    
+    if (isNumpad) {
+        if (e.altKey && (e.key === '1' || e.code === 'Numpad1' || e.keyCode === 97 || e.keyCode === 49)) {
+            e.preventDefault();
+            fillTestForm();
+            return;
+        }
+        if (e.altKey && (e.key === '2' || e.code === 'Numpad2' || e.keyCode === 98 || e.keyCode === 50)) {
+            e.preventDefault();
+            clearCurrentForm();
+            return;
+        }
+    }
+
+    if (e.altKey && (
+        e.key === '1' || 
+        e.code === 'Digit1' ||
+        e.keyCode === 49 ||
+        e.which === 49
+    )) {
+        e.preventDefault();
+        fillTestForm();
+    }
+
+    if (e.altKey && (
+        e.key === '2' || 
+        e.code === 'Digit2' ||
+        e.keyCode === 50 ||
+        e.which === 50
+    )) {
+        e.preventDefault();
+        clearCurrentForm();
+    }
+};
+
+onMounted(() => window.addEventListener('keydown', handleShortcut));
+onUnmounted(() => window.removeEventListener('keydown', handleShortcut));
 </script>
 
 <template>
@@ -46,6 +136,35 @@ const dragOptions = {
                         <ArrowLeft class="w-3 h-3 mr-1" /> Voltar ao estoque
                     </Link>
                     <h2 class="text-3xl font-black text-gray-800 tracking-tighter uppercase">Editar Produto</h2>
+                </div>
+                
+                <!-- Atalhos -->
+                <div class="mb-6 flex justify-center">
+                    <div class="inline-flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-gray-200 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <Sparkles class="w-4 h-4 text-indigo-500" />
+                            <span class="text-[11px] font-bold text-indigo-600">ALT+1</span>
+                            <span class="text-[11px] text-gray-600">Popular</span>
+                        </div>
+                        <div class="w-px h-4 bg-gray-300"></div>
+                        <div class="flex items-center gap-2">
+                            <ClearIcon class="w-4 h-4 text-red-500" />
+                            <span class="text-[11px] font-bold text-red-600">ALT+2</span>
+                            <span class="text-[11px] text-gray-600">Limpar</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="mb-6 flex justify-center gap-4">
+                    <button type="button" @click="fillTestForm" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                        <Sparkles class="w-4 h-4" />
+                        Popular Formulário
+                    </button>
+                    <button type="button" @click="clearCurrentForm" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                        <ClearIcon class="w-4 h-4" />
+                        Limpar Formulário
+                    </button>
                 </div>
                 
                 <div class="flex bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-inner">
@@ -97,8 +216,20 @@ const dragOptions = {
 
                     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
-                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Descrição Curta</label>
-                            <input v-model="form.description" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required />
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Nome do Produto</label>
+                            <input v-model="form.title" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Subtítulo</label>
+                            <input v-model="form.subtitle" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" maxlength="150" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Descrição</label>
+                            <textarea v-model="form.description" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" maxlength="500"></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Características</label>
+                            <textarea v-model="form.features" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" maxlength="500"></textarea>
                         </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Fornecedor</label>
@@ -210,13 +341,13 @@ const dragOptions = {
                                 <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="Nova tag..." class="flex-1 bg-transparent border-none focus:ring-0 text-sm font-bold p-0" />
                             </div>
                         </div>
-                        <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Meta Description (Máx 160)</label><textarea v-model="form.meta_description" maxlength="160" rows="2" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold text-xs" required></textarea></div>
+                        <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Meta Description (Máx 160)</label><textarea v-model="form.meta_description" name="meta_description" maxlength="160" rows="2" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold text-xs"></textarea></div>
                     </div>
 
                     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
                         <div class="flex items-center gap-3"><FileText class="w-5 h-5 text-green-600" /><h3 class="text-xs font-black uppercase tracking-widest text-gray-500">Conteúdo On-Page</h3></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Texto de Apresentação (Text 1)</label><textarea v-model="form.text1" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" required></textarea></div>    
+                            <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Texto de Apresentação (Text 1)</label><textarea v-model="form.text1" name="text1" rows="3" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold"></textarea></div>    
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Subtítulo H2</label><input v-model="form.h2" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl font-bold" /></div>

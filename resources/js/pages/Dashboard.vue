@@ -63,7 +63,7 @@ const techIcons = [
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">Painel de Controle</h2>
-                <a href="https://github.com/letsmg/erp-vue-laravel" target="_blank" class="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition">
+                <a href="https://github.com/letsmg/erp-vue" target="_blank" class="flex items-center gap-2 text-sm font-bold text-indigo-600 hover:text-indigo-800 transition">
                     <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" class="w-5 h-5" />
                     Repositório do Projeto
                 </a>
@@ -79,8 +79,8 @@ const techIcons = [
                             🌐 Infraestrutura & Deploy
                         </h3>
                         <ul class="space-y-3 text-sm text-gray-600">
-                            <li><strong>Cloud:</strong> Oracle Cloud (Free Tier)</li>
-                            <li><strong>IP Fixo:</strong> <a href="https://whatismyipaddress.com/ip/147.15.80.52" target="_blank" class="text-indigo-600 hover:underline font-mono">147.15.80.52</a></li>
+                            <li><strong>Hospedagem:</strong> Site blindado na Oracle Cloud com proteção Cloudflare</li>
+                            <li><strong>Acesso:</strong> <a href="https://check-host.net/ip-info?host=hierarca.com" target="_blank" class="text-indigo-600 hover:underline font-mono">Verificar IP hierarca.com</a></li>
                             <li><strong>CI/CD:</strong> Pipeline automatizado com testes <span class="text-indigo-600 font-semibold">PHPUnit</span> revisados ✅</li>
                         </ul>
                     </div>

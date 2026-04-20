@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Product;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 
-class StoreProductRequest extends FormRequest
+class StoreProductRequest extends BaseFormRequest
 {
     public function authorize(): bool
     {
@@ -17,7 +17,7 @@ class StoreProductRequest extends FormRequest
             // Dados Básicos
             'supplier_id'     => 'required|exists:suppliers,id',
             'title'           => 'required|string|max:150',
-            'subtitle'        => 'nullable|string|max:200',
+            'subtitle'        => 'nullable|string|max:150',
             'description'     => 'nullable|string',
             'features'        => 'nullable|string',
             'brand'           => 'required|nullable|string|max:100',

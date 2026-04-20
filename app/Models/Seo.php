@@ -16,6 +16,14 @@ class Seo extends Model
     ];
 
     /**
+     * IMPORTANT: schema_markup and google_tag_manager are EXCLUDED from sanitization
+     * These fields MUST accept raw HTML/JS for SEO purposes:
+     * - schema_markup: Contains JSON-LD structured data for search engines
+     * - google_tag_manager: Contains GTM scripts for analytics/tracking
+     * DO NOT add htmlspecialchars or strip_tags to these fields
+     */
+
+    /**
      * IMPORTANTE: Faz o Laravel entender meta_keywords como Array 
      * em vez de uma string pura.
      */

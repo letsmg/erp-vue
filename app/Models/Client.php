@@ -19,7 +19,6 @@ class Client extends Model
         'name',
         'document_number',
         'document_type', // CPF ou CNPJ
-        'phone',
         'phone1',
         'contact1',
         'phone2',
@@ -91,16 +90,6 @@ class Client extends Model
     }
 
     public function getNameAttribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-    }
-
-    public function getPhoneAttribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-    }
-
-    public function getPhone1Attribute($value)
     {
         return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }

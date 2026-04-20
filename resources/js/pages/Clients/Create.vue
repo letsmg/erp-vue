@@ -1,14 +1,20 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { 
-    Save, ArrowLeft, User, Mail, Lock, Shield, 
-    Smartphone, FileText, CheckCircle2, AlertCircle
+import { onMounted, onUnmounted, ref } from 'vue';
+import {
+    Save, ArrowLeft, User, Mail, Lock, Shield,
+    Smartphone, FileText, CheckCircle2, AlertCircle,
+    Sparkles, Trash2
 } from 'lucide-vue-next';
+import { fillFormData, clearFormData } from '@/lib/utils';
+import { isValidDocument } from '@/lib/validation';
 
 const props = defineProps({
     auth: Object
 });
+
+const documentError = ref('');
 
 const form = useForm({
     name: '',
@@ -16,6 +22,11 @@ const form = useForm({
     document_number: '',
     phone1: '',
     contact1: '',
+    phone2: '',
+    contact2: '',
+    state_registration: '',
+    municipal_registration: '',
+    contributor_type: '2',
     user_name: '',
     user_email: '',
     user_password: '',
@@ -25,6 +36,36 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('clients.store'));
+};
+
+// Event listeners for auto-fill shortcuts
+onMounted(() => {
+    window.addEventListener('magic-fill', fillTestForm);
+    window.addEventListener('magic-clear', clearCurrentForm);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('magic-fill', fillTestForm);
+    window.removeEventListener('magic-clear', clearCurrentForm);
+});
+
+const fillTestForm = () => fillFormData(form);
+const clearCurrentForm = () => {
+    clearFormData(form);
+};
+
+const validateDocument = () => {
+    const cleanDocument = form.document_number.replace(/\D/g, '');
+    if (cleanDocument.length > 0) {
+        const validation = isValidDocument(form.document_number);
+        if (!validation.valid) {
+            documentError.value = validation.message;
+        } else {
+            documentError.value = '';
+        }
+    } else {
+        documentError.value = '';
+    }
 };
 </script>
 
@@ -39,6 +80,18 @@ const submit = () => {
                         <ArrowLeft class="w-4 h-4" /> Voltar para lista
                     </Link>
                     <h2 class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic mt-2">Cadastrar Cliente</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" @click="fillTestForm" class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-black uppercase rounded-xl hover:bg-indigo-700 transition">
+                        <Sparkles class="w-4 h-4" />
+                        <span>Preencher</span>
+                        <span class="text-[10px] opacity-70">ALT+1</span>
+                    </button>
+                    <button type="button" @click="clearCurrentForm" class="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white text-xs font-black uppercase rounded-xl hover:bg-gray-700 transition">
+                        <Trash2 class="w-4 h-4" />
+                        <span>Limpar</span>
+                        <span class="text-[10px] opacity-70">ALT+2</span>
+                    </button>
                 </div>
             </div>
 
@@ -71,8 +124,9 @@ const submit = () => {
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">{{ form.document_type }}</label>
-                                <input v-model="form.document_number" type="text" required class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="000.000.000-00">
+                                <input v-model="form.document_number" type="text" required class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="000.000.000-00" @input="validateDocument">
                                 <p v-if="form.errors.document_number" class="mt-2 text-[10px] font-black text-rose-500 uppercase ml-1">{{ form.errors.document_number }}</p>
+                                <p v-if="documentError" class="mt-2 text-[10px] font-black text-rose-500 uppercase ml-1">{{ documentError }}</p>
                             </div>
                         </div>
                     </div>
@@ -147,10 +201,33 @@ const submit = () => {
                             <Smartphone class="w-5 h-5 text-slate-400" />
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Contato Direto</h3>
                         </div>
-                        
+
                         <div class="space-y-4">
-                            <input v-model="form.phone1" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="WhatsApp / Telefone">
-                            <input v-model="form.contact1" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Nome do Contato">
+                            <input v-model="form.phone1" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="WhatsApp / Telefone Principal">
+                            <input v-model="form.contact1" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Nome do Contato Principal">
+                            <input v-model="form.phone2" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="WhatsApp / Telefone Secundário">
+                            <input v-model="form.contact2" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Nome do Contato Secundário">
+                        </div>
+                    </div>
+
+                    <!-- Dados Fiscais (apenas para CNPJ) -->
+                    <div v-if="form.document_type === 'CNPJ'" class="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100">
+                        <div class="flex items-center gap-3 mb-6">
+                            <FileText class="w-5 h-5 text-slate-400" />
+                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Dados Fiscais</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <input v-model="form.state_registration" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Inscrição Estadual">
+                            <input v-model="form.municipal_registration" type="text" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-3 text-xs focus:ring-2 focus:ring-primary transition-all outline-none" placeholder="Inscrição Municipal">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Tipo de Contribuinte</label>
+                                <select v-model="form.contributor_type" class="w-full bg-slate-50 border-slate-200 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-primary transition-all outline-none appearance-none">
+                                    <option value="1">Contribuinte ICMS</option>
+                                    <option value="2">Isento</option>
+                                    <option value="9">Não Contribuinte</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

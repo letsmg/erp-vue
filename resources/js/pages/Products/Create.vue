@@ -21,50 +21,40 @@ const {
 } = useProductForm(props);
 
 const handleShortcut = (e) => {
-    // Verifica se é teclado numérico (location 3) - Ctrl+Alt pode não funcionar bem
+    // Verifica se é teclado numérico (location 3)
     const isNumpad = e.location === 3 || e.code.startsWith('Numpad');
     
-    // Para teclado numérico, usa apenas keyCode/key sem exigir Ctrl+Alt
+    // Para teclado numérico, usa apenas Alt+1/2
     if (isNumpad) {
-        if (e.key === '1' || e.code === 'Numpad1' || e.keyCode === 97 || e.keyCode === 49) {
+        if (e.altKey && (e.key === '1' || e.code === 'Numpad1' || e.keyCode === 97 || e.keyCode === 49)) {
             e.preventDefault();
             fillTestForm();
             return;
         }
-        if (e.key === '2' || e.code === 'Numpad2' || e.keyCode === 98 || e.keyCode === 50) {
+        if (e.altKey && (e.key === '2' || e.code === 'Numpad2' || e.keyCode === 98 || e.keyCode === 50)) {
             e.preventDefault();
             clearCurrentForm();
             return;
         }
     }
 
-    // Para teclado QWERTY, aceita tanto com Ctrl+Alt quanto sem Ctrl+Alt (caracteres especiais)
-    // Aceita caracteres especiais ¹ e ² quando pressionados sozinhos
-    if ((e.ctrlKey && e.altKey && (
+    // Para teclado QWERTY, Alt+1 ou Alt+2
+    if (e.altKey && (
         e.key === '1' || 
         e.code === 'Digit1' ||
         e.keyCode === 49 ||
         e.which === 49
-    )) || (
-        !e.ctrlKey && !e.altKey && (
-            e.key === '¹' ||  // Caractere especial ¹
-            e.key === '²'    // Caractere especial ²
-        )
     )) {
-        if (e.key === '¹' || e.key === '1') {
-            e.preventDefault();
-            fillTestForm();
-        }
+        e.preventDefault();
+        fillTestForm();
     }
 
-    // Ctrl+Alt+2 ou caractere especial ² para limpar
-    if ((e.ctrlKey && e.altKey && (
+    // Alt+2 para limpar
+    if (e.altKey && (
         e.key === '2' || 
         e.code === 'Digit2' ||
         e.keyCode === 50 ||
         e.which === 50
-    )) || (
-        !e.ctrlKey && !e.altKey && e.key === '²'
     )) {
         e.preventDefault();
         clearCurrentForm();
@@ -95,13 +85,13 @@ onUnmounted(() => window.removeEventListener('keydown', handleShortcut));
                     <div class="inline-flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-gray-200 shadow-sm">
                         <div class="flex items-center gap-2">
                             <Sparkles class="w-4 h-4 text-indigo-500" />
-                            <span class="text-[11px] font-bold text-indigo-600">CTRL+ALT+1</span>
+                            <span class="text-[11px] font-bold text-indigo-600">ALT+1</span>
                             <span class="text-[11px] text-gray-600">Popular</span>
                         </div>
                         <div class="w-px h-4 bg-gray-300"></div>
                         <div class="flex items-center gap-2">
                             <ClearIcon class="w-4 h-4 text-red-500" />
-                            <span class="text-[11px] font-bold text-red-600">CTRL+ALT+2</span>
+                            <span class="text-[11px] font-bold text-red-600">ALT+2</span>
                             <span class="text-[11px] text-gray-600">Limpar</span>
                         </div>
                     </div>
@@ -151,7 +141,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleShortcut));
                     <div class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2">
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Nome Completo do Produto</label>
-                            <input v-model="form.description" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl focus:ring-indigo-500 font-bold" required />
+                            <input v-model="form.title" type="text" class="w-full border-gray-100 bg-gray-50 rounded-2xl focus:ring-indigo-500 font-bold" required />
                         </div>
                         <div>
                             <label class="block text-[10px] font-black uppercase text-gray-400 mb-2">Fornecedor Origem</label>

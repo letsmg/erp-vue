@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    'mercadopago' => [
+        'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+        'api_url' => env('MERCADOPAGO_API_URL', 'https://api.mercadopago.com'),
+        'sandbox' => env('MERCADOPAGO_SANDBOX', true),
+    ],
+
+    'rabbitmq' => [
+        'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+        'port' => env('RABBITMQ_PORT', 5672),
+        'user' => env('RABBITMQ_USER', 'guest'),
+        'password' => env('RABBITMQ_PASSWORD', 'guest'),
+        'vhost' => env('RABBITMQ_VHOST', '/'),
+    ],
+
+    'kafka' => [
+        'brokers' => env('KAFKA_BROKERS', '127.0.0.1:9092'),
+        'topic' => env('KAFKA_TOPIC', 'erp_events'),
+        'options' => [
+            'security.protocol' => env('KAFKA_SECURITY_PROTOCOL', 'PLAINTEXT'),
+        ],
+    ],
+
 ];

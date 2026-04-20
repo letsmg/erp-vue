@@ -1,17 +1,24 @@
 <script setup>
-import { Head, Link, usePage, router} from '@inertiajs/vue3';
-import { watch } from 'vue'
-import { 
-    ArrowLeft, ShoppingCart, Globe, Star, Loader2, 
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
+import {
+    ArrowLeft, ShoppingCart, Globe, Star, Loader2,
     Eye, EyeOff, LayoutDashboard, ChevronLeft, ChevronRight
 } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
-import StoreLayout from '@/Layouts/StoreLayout.vue'; 
+import { computed, ref, watch } from 'vue';
+import StoreLayout from '@/Layouts/StoreLayout.vue';
 
 const props = defineProps({
     product: Object,
     relatedProducts: Array
 });
+
+// Sanitize HTML output to prevent XSS
+const sanitizeHtml = (html) => {
+    if (!html) return '';
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
+};
 
 watch(() => props.product.id, () => {
     activeImageIndex.value = 0;
@@ -83,11 +90,11 @@ const formatCurrency = (value) => {
         <meta name="keywords" :content="seoData.meta_keywords" />
         <link rel="slug" :href="seoData.slug || page.url" />
         
-        <component 
-            v-if="seoData.schema_markup" 
-            is="script" 
+        <component
+            v-if="seoData.schema_markup"
+            is="script"
             type="application/ld+json"
-            v-html="seoData.schema_markup"
+            v-html="sanitizeHtml(seoData.schema_markup)"
         />
     </Head>
 

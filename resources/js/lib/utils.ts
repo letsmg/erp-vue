@@ -52,6 +52,73 @@ export const maskCEP = (value: string): string => {
 
 // --- FUNÇÕES DE TESTE ---
 
+// --- FUNÇÕES DE GERAÇÃO DE CPF/CNPJ VÁLIDOS ---
+
+/**
+ * Gera um CPF válido aleatório
+ */
+const generateValidCPF = (): string => {
+    const cpf = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+
+    for (let t = 9; t < 11; t++) {
+        let d = 0;
+        for (let c = 0; c < t; c++) {
+            d += cpf[c] * ((t + 1) - c);
+        }
+        d = ((10 * d) % 11) % 10;
+        cpf.push(d);
+    }
+
+    return cpf.join('');
+};
+
+/**
+ * Gera um CNPJ válido aleatório
+ */
+const generateValidCNPJ = (): string => {
+    const cnpj = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10));
+
+    // Primeiro dígito verificador
+    let sum = 0;
+    let weight = 5;
+    for (let i = 0; i < 12; i++) {
+        sum += cnpj[i] * weight;
+        weight = weight === 2 ? 9 : weight - 1;
+    }
+    let remainder = sum % 11;
+    const digit1 = remainder < 2 ? 0 : 11 - remainder;
+    cnpj.push(digit1);
+
+    // Segundo dígito verificador
+    sum = 0;
+    weight = 6;
+    for (let i = 0; i < 13; i++) {
+        sum += cnpj[i] * weight;
+        weight = weight === 2 ? 9 : weight - 1;
+    }
+    remainder = sum % 11;
+    const digit2 = remainder < 2 ? 0 : 11 - remainder;
+    cnpj.push(digit2);
+
+    return cnpj.join('');
+};
+
+/**
+ * Formata CPF para exibição
+ */
+const formatCPF = (cpf: string): string => {
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+};
+
+/**
+ * Formata CNPJ para exibição
+ */
+const formatCNPJ = (cnpj: string): string => {
+    return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+};
+
+// --- FUNÇÕES DE TESTE ---
+
 export const fillFormData = (form: any, suppliers: any[] = [], categories: any[] = []) => {
     if (!form) return;
 
@@ -66,9 +133,9 @@ export const fillFormData = (form: any, suppliers: any[] = [], categories: any[]
         company_name: () => "Empresa Teste " + Math.random().toString(36).substring(7).toUpperCase(),
         email: () => `teste_${Math.random().toString(36).substring(5)}@vuelaravel.com`,
         password: () => "Mudar@123",
-        password_confirmation: () => "Mudar@123",        
+        password_confirmation: () => "Mudar@123",
+
         cnpj: () => "42.123.456/0001-99",
-        state_registration: () => "ISENTO",
         zip_code: () => "01001-000",
         address: () => "Rua de Teste, " + Math.floor(Math.random() * 999),
         neighborhood: () => "Bairro Industrial",
@@ -76,7 +143,30 @@ export const fillFormData = (form: any, suppliers: any[] = [], categories: any[]
         state: () => ufs[Math.floor(Math.random() * ufs.length)],
         contact_name_1: () => "Contato Principal",
         phone_1: () => "(11) 98888-7777",
-        
+
+        // --- CLIENTES (CPF/CNPJ e campos adicionais) ---
+        document_type: () => Math.random() > 0.5 ? 'CPF' : 'CNPJ',
+        document_number: () => {
+            const type = Math.random() > 0.5 ? 'CPF' : 'CNPJ';
+            return type === 'CPF' ? formatCPF(generateValidCPF()) : formatCNPJ(generateValidCNPJ());
+        },
+        phone1: () => "(11) 98888-7777",
+        contact1: () => "João Silva",
+        phone2: () => "(11) 97777-6666",
+        contact2: () => "Maria Santos",
+        phone: () => "(11) 96666-5555",
+        state_registration: () => "123456789",
+        municipal_registration: () => "987654321",
+        contributor_type: () => Math.floor(Math.random() * 3) + 1, // 1, 2 ou 9
+        user_name: () => {
+            const nomes = ['João', 'Maria', 'Pedro', 'Ana', 'Carlos', 'Lucas'];
+            const sobrenomes = ['Silva', 'Souza', 'Oliveira', 'Costa', 'Pereira'];
+            return `${nomes[Math.floor(Math.random()*nomes.length)]} ${sobrenomes[Math.floor(Math.random()*sobrenomes.length)]}`;
+        },
+        user_email: () => `usuario_${Math.random().toString(36).substring(5)}@empresa.com`,
+        user_password: () => "Mudar@123",
+        user_password_confirmation: () => "Mudar@123",
+
         // Produtos
         description: () => "Tênis Performance Turbo " + Math.floor(Math.random() * 1000),
         brand: () => "Nike",
@@ -98,7 +188,7 @@ export const fillFormData = (form: any, suppliers: any[] = [], categories: any[]
         is_featured: () => Math.random() > 0.5,
         supplier_id: () => (suppliers && suppliers.length > 0) ? suppliers[0].id : '',
         category_id: () => (categories && categories.length > 0) ? categories[0].id : null,
-        
+
         // Dimensões
         weight: () => 0.350,
         width: () => 30.00,
@@ -117,7 +207,8 @@ export const fillFormData = (form: any, suppliers: any[] = [], categories: any[]
         text1: () => "Desenvolvido para atletas que buscam quebrar recordes.",
         text2: () => "Garantia de 12 meses direto com o fabricante.",
         schema_markup: () => '{"@context": "https://schema.org", "@type": "Product", "name": "Nike Air Max"}',
-        google_tag_manager: () => "\n<script>(function(w,d,s,l,i){w[l]=w[l]||[];})(window,document,'script','dataLayer','GTM-XXXX');</script>"        
+        google_tag_manager: () => "\n<script>(function(w,d,s,l,i){w[l]=w[l]||[];})(window,document,'script','dataLayer','GTM-XXXX');</script>"
+
     };
 
     Object.keys(form.data()).forEach((key) => {

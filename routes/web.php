@@ -11,6 +11,9 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SearchSuggestionsController;
 use App\Http\Controllers\RedisMonitorController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\VendasController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -68,6 +71,9 @@ Route::middleware('guest')->prefix('cliente')->name('client.')->group(function (
     Route::post('/registrar', [SelfClientAuthController::class, 'register'])->name('register.post');
     Route::get('/esqueci-senha', [SelfClientAuthController::class, 'showForgotPassword'])->name('forgot.password');
     Route::post('/esqueci-senha', [SelfClientAuthController::class, 'sendResetLinkEmail'])->name('forgot.password.post');
+    Route::get('/verificar-email/{id}/{hash}', [SelfClientAuthController::class, 'verifyEmail'])
+        ->middleware(['signed'])
+        ->name('verification.verify');
 });
 
 /*
@@ -157,6 +163,19 @@ Route::middleware(['auth', 'staff'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | VENDAS (ADMIN)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::prefix('vendas')->name('vendas.')->group(function () {
+        Route::get('/', [VendasController::class, 'index'])->name('index');
+        Route::get('/{id}', [VendasController::class, 'show'])->name('show');
+        Route::patch('/{id}/status', [VendasController::class, 'updateStatus'])->name('update.status');
+        Route::post('/{id}/cancelar', [VendasController::class, 'cancel'])->name('cancel');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | SUPER ADMIN
     |--------------------------------------------------------------------------
     */
@@ -188,6 +207,29 @@ Route::middleware(['auth', 'client'])->prefix('cliente')->name('client.')->group
     Route::put('/endereco/{address}', [SelfClientAuthController::class, 'updateAddress'])->name('address.update');
     Route::delete('/endereco/{address}', [SelfClientAuthController::class, 'destroyAddress'])->name('address.destroy');
     Route::patch('/endereco/{address}/entrega', [SelfClientAuthController::class, 'setDeliveryAddress'])->name('address.set-delivery');
+
+    // Pedidos (Compras)
+    Route::get('/pedidos', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/pedidos/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/pedidos/{id}/cancelar', [OrderController::class, 'cancel'])->name('orders.cancel');
+});
+
+/*
+|--------------------------------------------------------------------------
+| CHECKOUT (AUTH - CLIENT)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth', 'client'])->prefix('checkout')->name('checkout.')->group(function () {
+    Route::post('/pedido', [CheckoutController::class, 'createOrder'])->name('create.order');
+    Route::post('/pagamento/{saleId}', [CheckoutController::class, 'createPaymentPreference'])->name('create.payment');
+});
+
+Route::prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/sucesso/{saleId}', [CheckoutController::class, 'success'])->name('success');
+    Route::get('/falha/{saleId}', [CheckoutController::class, 'failure'])->name('failure');
+    Route::get('/pendente/{saleId}', [CheckoutController::class, 'pending'])->name('pending');
+    Route::post('/webhook', [CheckoutController::class, 'webhook'])->name('webhook');
 });
 
 /*

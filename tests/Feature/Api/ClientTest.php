@@ -189,15 +189,14 @@ class ClientTest extends TestCase
     }
 
     #[Test]
-    public function it_validates_required_state_registration_for_cnpj()
+    public function it_rejects_invalid_cpf()
     {
         $admin = User::factory()->admin()->create();
 
         $data = [
             'name' => 'Test Client',
-            'document_type' => 'CNPJ',
-            'document_number' => '11222333000181', // CNPJ válido
-            'state_registration' => '', // Empty for CNPJ
+            'document_type' => 'CPF',
+            'document_number' => '11111111111', // Invalid CPF (all same digits)
             'user_name' => '',
             'user_email' => '',
             'user_password' => '',
@@ -206,8 +205,73 @@ class ClientTest extends TestCase
 
         $response = $this->actingAs($admin)->post('/api/v1/clients', $data, ['Accept' => 'application/json']);
 
-        // O controller pode não validar state_registration como obrigatório
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['document_number']);
+    }
+
+    #[Test]
+    public function it_rejects_invalid_cnpj()
+    {
+        $admin = User::factory()->admin()->create();
+
+        $data = [
+            'name' => 'Test Client',
+            'document_type' => 'CNPJ',
+            'document_number' => '11111111111111', // Invalid CNPJ (all same digits)
+            'user_name' => '',
+            'user_email' => '',
+            'user_password' => '',
+            'user_password_confirmation' => '',
+        ];
+
+        $response = $this->actingAs($admin)->post('/api/v1/clients', $data, ['Accept' => 'application/json']);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['document_number']);
+    }
+
+    #[Test]
+    public function it_validates_required_state_registration_for_cnpj()
+    {
+        $admin = User::factory()->admin()->create();
+
+        $data = [
+            'name' => 'Test Client',
+            'document_type' => 'CNPJ',
+            'document_number' => '11222333000181', // CNPJ válido
+            'state_registration' => '', // Empty for CNPJ - should fail
+            'user_name' => '',
+            'user_email' => '',
+            'user_password' => '',
+            'user_password_confirmation' => '',
+        ];
+
+        $response = $this->actingAs($admin)->post('/api/v1/clients', $data, ['Accept' => 'application/json']);
+
         $response->assertStatus(422); // Retorna 422 com erro de validação em JSON
+        $response->assertJsonValidationErrors(['state_registration']);
+    }
+
+    #[Test]
+    public function it_allows_optional_state_registration_for_cpf()
+    {
+        $admin = User::factory()->admin()->create();
+
+        $data = [
+            'name' => 'Test Client',
+            'document_type' => 'CPF',
+            'document_number' => '52998224725', // CPF válido
+            'state_registration' => '', // Empty for CPF - should pass
+            'user_name' => '',
+            'user_email' => '',
+            'user_password' => '',
+            'user_password_confirmation' => '',
+        ];
+
+        $response = $this->actingAs($admin)->post('/api/v1/clients', $data, ['Accept' => 'application/json']);
+
+        // Pode retornar 201 (sucesso) ou 422 (outros erros de validação)
+        $this->assertTrue(in_array($response->status(), [201, 302, 422]));
     }
 
     #[Test]

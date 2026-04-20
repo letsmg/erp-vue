@@ -14,9 +14,9 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('supplier_id')->constrained()->onDelete('cascade');
             $table->string('title', 150);
-            $table->string('subtitle', 200)->nullable();
-            $table->text('description')->nullable();
-            $table->text('features')->nullable();
+            $table->text('description', 500)->nullable();
+            $table->string('subtitle', 150)->nullable();            
+            $table->text('features', 500)->nullable();
             $table->string('brand', 100)->nullable();
             $table->string('model', 100)->nullable();
             $table->string('size', 20)->nullable();

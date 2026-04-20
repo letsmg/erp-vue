@@ -1,13 +1,21 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, Link } from '@inertiajs/vue3';
-import { 
-    UserPlus, Search, Filter, MoreHorizontal, 
-    UserCheck, UserMinus, UserCog, Trash2, 
+import {
+    UserPlus, Search, Filter, MoreHorizontal,
+    UserCheck, UserMinus, UserCog, Trash2,
     Mail, Phone, ShieldCheck, ShieldAlert
 } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 import debounce from 'lodash/debounce';
+
+// Sanitize HTML output to prevent XSS
+const sanitizeHtml = (html) => {
+    if (!html) return '';
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
+};
 
 const props = defineProps({ 
     clients: Object,
@@ -196,7 +204,7 @@ const getStatusColor = (isActive) => isActive ? 'text-emerald-700 bg-emerald-50 
                         v-for="(link, k) in clients.links" 
                         :key="k"
                         :href="link.url"
-                        v-html="link.label"
+                        v-html="sanitizeHtml(link.label)"
                         class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shadow-sm"
                         :class="[
                             link.active ? 'bg-primary text-white border-primary shadow-primary/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50',

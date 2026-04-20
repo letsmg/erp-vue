@@ -1,14 +1,22 @@
 <script setup>
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
-import { 
-    ArrowLeft, ShoppingCart, Globe, Star, Loader2, 
+import {
+    ArrowLeft, ShoppingCart, Globe, Star, Loader2,
     Eye, EyeOff, LayoutDashboard, ChevronLeft, ChevronRight,
     Tag, ShieldCheck, Truck, Heart
 } from 'lucide-vue-next';
 import { computed, ref, watch, inject } from 'vue';
 import StoreLayout from '@/Layouts/StoreLayout.vue';
 
-const theme = inject('theme'); 
+const theme = inject('theme');
+
+// Sanitize HTML output to prevent XSS
+const sanitizeHtml = (html) => {
+    if (!html) return '';
+    const temp = document.createElement('div');
+    temp.textContent = html;
+    return temp.innerHTML;
+}; 
 
 const props = defineProps({
     product: Object,
@@ -87,8 +95,26 @@ const formatCurrency = (value) => {
 };
 
 const addToCart = (product) => {
-    // TODO: Implementar lógica do carrinho
-    console.log('Adicionar ao carrinho:', product);
+    if (!page.props.auth?.user) {
+        router.get(route('client.login'));
+        return;
+    }
+
+    const price = product.promo_price && isPromoActive.value ? product.promo_price : product.sale_price;
+    
+    router.post(route('shopping-cart.store'), {
+        product_id: product.id,
+        quantity: 1,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            // Opcional: mostrar notificação de sucesso
+            console.log('Produto adicionado ao carrinho');
+        },
+        onError: (errors) => {
+            console.error('Erro ao adicionar ao carrinho:', errors);
+        }
+    });
 };
 
 const addToWishlist = (product) => {
@@ -103,8 +129,8 @@ const addToWishlist = (product) => {
         <meta name="description" :content="seoData.meta_description" />
         <meta name="keywords" :content="seoData.meta_keywords" />
         <link rel="slug" :href="seoData.slug_url || page.url" />
-        <component v-if="seoData.schema_markup" is="script" type="application/ld+json" v-html="seoData.schema_markup" />
-        
+        <component v-if="seoData.schema_markup" is="script" type="application/ld+json" v-html="sanitizeHtml(seoData.schema_markup)" />
+
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="product" />
         <meta property="og:title" :content="metaTitle" />
@@ -197,7 +223,7 @@ const addToWishlist = (product) => {
                         <div class="mb-10 flex flex-col">
                             <template v-if="isPromoActive">
                                 <span class="line-through text-lg font-bold" :class="theme === 'dark' ? 'text-slate-500' : 'text-gray-400'">{{ formatCurrency(product.sale_price) }}</span>
-                                <div class="text-6xl font-black tracking-tighter" :class="theme === 'dark' ? 'text-red-400' : 'text-red-600'">
+                                <div class="text-6xl font-black tracking-tighter" :class="theme === 'dark' ? 'text-white' : 'text-gray-900'">
                                     {{ formatCurrency(product.promo_price) }}
                                 </div>
                             </template>
@@ -214,7 +240,7 @@ const addToWishlist = (product) => {
                         </div>
 
                         <div class="flex flex-col gap-4 mb-12">
-                            <button class="w-full bg-gray-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
+                            <button @click="addToCart(product)" class="w-full bg-gray-900 text-white py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-[11px] hover:bg-indigo-600 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95">
                                 <ShoppingCart class="w-5 h-5" />
                                 Adicionar ao Carrinho
                             </button>

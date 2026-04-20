@@ -18,9 +18,12 @@ export function useProductEdit(props) {
         _method: 'PUT',
 
         // --- Dados Gerais ---
+        title: props.product.title || '',
+        subtitle: props.product.subtitle || '',
         description: props.product.description || '',
+        features: props.product.features || '',
         supplier_id: props.product.supplier_id || '',
-        category_id: props.product.supplier_id || '',
+        category_id: props.product.category_id || '',
         barcode: props.product.barcode || '',
         brand: props.product.brand || '',
         model: props.product.model || '',
@@ -28,6 +31,8 @@ export function useProductEdit(props) {
         size: props.product.size || '',
         gender: props.product.gender || 'Unissex',
         stock_quantity: props.product.stock_quantity || 0,
+        is_active: Boolean(props.product.is_active),
+        is_featured: Boolean(props.product.is_featured),
         // Slug centralizado no Produto
         slug: props.product.slug || '',
 

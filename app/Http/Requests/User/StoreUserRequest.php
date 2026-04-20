@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\User;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseFormRequest;
 use Illuminate\Validation\Rules\Password;
 
-class StoreUserRequest extends FormRequest
+class StoreUserRequest extends BaseFormRequest
 {
     public function authorize(): bool
     {

@@ -1,8 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { Save, ArrowLeft, Shield, Mail, Lock, User, Eye, EyeOff, UserCheck, XCircle } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Save, ArrowLeft, Shield, Mail, Lock, User, Eye, EyeOff, UserCheck, XCircle, Sparkles, X } from 'lucide-vue-next';
+import { fillFormData, clearFormData } from '@/lib/utils';
 
 const props = defineProps({ user: Object });
 const showPassword = ref(false);
@@ -21,6 +22,19 @@ const submit = () => {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
+
+const filler = () => fillFormData(form);
+const clearer = () => clearFormData(form);
+
+onMounted(() => {
+    window.addEventListener('magic-fill', filler);
+    window.addEventListener('magic-clear', clearer);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('magic-fill', filler);
+    window.removeEventListener('magic-clear', clearer);
+});
 </script>
 
 <template>
@@ -35,6 +49,35 @@ const submit = () => {
                 <span class="text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-full">
                     ID: #{{ user.id }}
                 </span>
+            </div>
+
+            <!-- Atalhos -->
+            <div class="mb-6 flex justify-center">
+                <div class="inline-flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <Sparkles class="w-4 h-4 text-indigo-500" />
+                        <span class="text-[11px] font-bold text-indigo-600">ALT+1</span>
+                        <span class="text-[11px] text-gray-600">Popular</span>
+                    </div>
+                    <div class="w-px h-4 bg-gray-300"></div>
+                    <div class="flex items-center gap-2">
+                        <X class="w-4 h-4 text-red-500" />
+                        <span class="text-[11px] font-bold text-red-600">ALT+2</span>
+                        <span class="text-[11px] text-gray-600">Limpar</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="mb-6 flex justify-center gap-4">
+                <button type="button" @click="filler" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                    <Sparkles class="w-4 h-4" />
+                    Popular Formulário
+                </button>
+                <button type="button" @click="clearer" class="bg-slate-600 hover:bg-slate-700 active:scale-95 active:shadow-lg text-white px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2 transform cursor-pointer">
+                    <X class="w-4 h-4" />
+                    Limpar Formulário
+                </button>
             </div>
 
             <Transition

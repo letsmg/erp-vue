@@ -350,7 +350,7 @@ const destroy = (id) => {
                         <tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-gray-50/80 transition-colors group">
                             <td class="p-5">
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-gray-800">{{ product.description }}</span>
+                                    <span class="text-sm font-bold text-gray-800">{{ product.title }}</span>
                                     <span class="text-[10px] text-gray-400 font-medium uppercase">
                                         {{ product.brand || 'Sem marca' }} • {{ product.model || 'Sem modelo' }}
                                     </span>

@@ -21,7 +21,11 @@ return new class extends Migration
             // SEO Fields
             $table->string('meta_description', 160);
             $table->string('meta_keywords');
+            // IMPORTANT: schema_markup contains JSON-LD structured data and MUST NOT be sanitized
+            // This field accepts valid JSON/HTML for SEO purposes
             $table->text('schema_markup')->nullable();
+            // IMPORTANT: google_tag_manager contains GTM scripts and MUST NOT be sanitized
+            // This field accepts valid HTML/JS for tracking purposes
             $table->text('google_tag_manager')->nullable();                        
             $table->timestamps();
 

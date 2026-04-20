@@ -54,13 +54,13 @@ onUnmounted(() => {
                 <div class="inline-flex items-center gap-4 bg-slate-50 px-6 py-3 rounded-2xl border border-gray-200 shadow-sm">
                     <div class="flex items-center gap-2">
                         <Sparkles class="w-4 h-4 text-indigo-500" />
-                        <span class="text-[11px] font-bold text-indigo-600">CTRL+ALT+1</span>
+                        <span class="text-[11px] font-bold text-indigo-600">ALT+1</span>
                         <span class="text-[11px] text-gray-600">Popular</span>
                     </div>
                     <div class="w-px h-4 bg-gray-300"></div>
                     <div class="flex items-center gap-2">
                         <X class="w-4 h-4 text-red-500" />
-                        <span class="text-[11px] font-bold text-red-600">CTRL+ALT+2</span>
+                        <span class="text-[11px] font-bold text-red-600">ALT+2</span>
                         <span class="text-[11px] text-gray-600">Limpar</span>
                     </div>
                 </div>

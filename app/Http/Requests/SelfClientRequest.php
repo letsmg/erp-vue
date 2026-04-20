@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
-class SelfClientRequest extends FormRequest
+class SelfClientRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,9 +22,32 @@ class SelfClientRequest extends FormRequest
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'document_number' => 'required|string|max:20',
+            'document_number' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
+                $cleanDocument = preg_replace('/[^0-9]/', '', $value);
+                if (strlen($cleanDocument) === 11) {
+                    if (!$this->isValidCPF($cleanDocument)) {
+                        $fail('O CPF informado é inválido.');
+                    }
+                } elseif (strlen($cleanDocument) === 14) {
+                    if (!$this->isValidCNPJ($cleanDocument)) {
+                        $fail('O CNPJ informado é inválido.');
+                    }
+                } else {
+                    $fail('O documento deve ter 11 dígitos (CPF) ou 14 dígitos (CNPJ).');
+                }
+            }],
             'contributor_type' => 'required|in:1,2,9',
-            'state_registration' => 'nullable|string|max:20',
+            'state_registration' => [
+                'nullable',
+                'string',
+                'max:20',
+                function ($attribute, $value, $fail) {
+                    $cleanDocument = preg_replace('/[^0-9]/', '', $this->input('document_number'));
+                    if (strlen($cleanDocument) === 14 && empty($value)) {
+                        $fail('Inscrição Estadual é obrigatória para CNPJ');
+                    }
+                },
+            ],
             'phone1' => 'required|string|max:20',
             'phone2' => 'nullable|string|max:20',
             'contact1' => 'nullable|string|max:255',
@@ -56,6 +78,71 @@ class SelfClientRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Valida CPF
+     */
+    private function isValidCPF(string $cpf): bool
+    {
+        // Verifica se todos os dígitos são iguais
+        if (preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+
+        // Calcula dígitos verificadores
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cpf[$c] != $d) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Valida CNPJ
+     */
+    private function isValidCNPJ(string $cnpj): bool
+    {
+        // Verifica se todos os dígitos são iguais
+        if (preg_match('/(\d)\1{13}/', $cnpj)) {
+            return false;
+        }
+
+        // Primeiro dígito verificador
+        $sum = 0;
+        $weight = 5;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit1 = $remainder < 2 ? 0 : 11 - $remainder;
+
+        if ($cnpj[12] != $digit1) {
+            return false;
+        }
+
+        // Segundo dígito verificador
+        $sum = 0;
+        $weight = 6;
+        for ($i = 0; $i < 13; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit2 = $remainder < 2 ? 0 : 11 - $remainder;
+
+        if ($cnpj[13] != $digit2) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

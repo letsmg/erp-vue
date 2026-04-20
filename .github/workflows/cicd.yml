@@ -1,4 +1,4 @@
-name: 🚀 Build & Deploy ERP Monolito Atômico
+name: 🚀 Build & Deploy ERP Modular (Atômico)
 
 on:
   push:
@@ -20,18 +20,13 @@ jobs:
       - name: 📦 Install Composer
         run: composer install --no-dev --optimize-autoloader --no-interaction
 
-      - name: 📝 Prepare Build Env
-        run: |
-          cp .env.example .env
-          php artisan key:generate
-
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: 🔨 Build Vite Assets
+      - name: 🔨 Build Assets (Vite/TS)
         run: |
           npm install
           npm run build
@@ -39,54 +34,63 @@ jobs:
       - name: 🤐 Criar Pacote de Deploy
         run: zip -r deploy.zip . -x ".git/*" "node_modules/*" ".github/*" "tests/*" ".env*" "storage/*"
 
-      - name: 🔑 Configure SSH & Known Hosts
+      - name: 🔑 Configure SSH
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
-      - name: 🚀 Deploy Atômico (Zero Downtime)
+      - name: 🚀 Deploy Atômico
         run: |
-          scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/erp_monolito_deploy.zip
+          PROJECT_NAME="erp-modular"
+          scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}-deploy.zip
 
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
             
-            # CONFIGURAÇÃO DE CAMINHOS DO MONOLITO
-            BASE_DIR="/var/www/erp"
+            # CONFIGURAÇÃO DE VARIÁVEIS COM HÍFEN
+            PROJECT="erp-modular"
+            BASE_PATH="/var/www/$PROJECT"
+            SHARED_PATH="${BASE_PATH}-shared"
+            LIVE_LINK="${BASE_PATH}-live"
+            NEW_RELEASE="${BASE_PATH}-new"
             
-            # 1. Preparar pasta temporária
-            sudo rm -rf ${BASE_DIR}_new
-            sudo mkdir -p ${BASE_DIR}_new
-            sudo unzip -o /tmp/erp_monolito_deploy.zip -d ${BASE_DIR}_new
+            # 1. Preparar estrutura inicial se não existir
+            sudo mkdir -p ${SHARED_PATH}/storage/app/public
+            sudo mkdir -p ${SHARED_PATH}/storage/framework/cache
+            sudo mkdir -p ${SHARED_PATH}/storage/framework/sessions
+            sudo mkdir -p ${SHARED_PATH}/storage/framework/views
+            sudo mkdir -p ${SHARED_PATH}/storage/logs
             
-            # 2. AJUSTE DE PERMISSÕES ANTECIPADO
-            # Garante que www-data seja dono da nova pasta e do cofre de arquivos
-            sudo chown -R www-data:www-data ${BASE_DIR}_new
-            sudo chown -R www-data:www-data ${BASE_DIR}_shared/storage
+            # 2. Limpar e descompactar nova versão
+            sudo rm -rf ${NEW_RELEASE}
+            sudo mkdir -p ${NEW_RELEASE}
+            sudo unzip -o /tmp/${PROJECT}-deploy.zip -d ${NEW_RELEASE}
             
-            # 3. Linkar arquivos persistentes (Shared)
-            # Linka o .env e a pasta storage raiz para o Laravel usar internamente
-            sudo ln -sfn ${BASE_DIR}_shared/.env ${BASE_DIR}_new/.env
-            sudo ln -sfn ${BASE_DIR}_shared/storage ${BASE_DIR}_new/storage
+            # 3. Vincular arquivos persistentes (Shared)
+            sudo ln -sfn ${SHARED_PATH}/.env ${NEW_RELEASE}/.env
+            sudo rm -rf ${NEW_RELEASE}/storage
+            sudo ln -sfn ${SHARED_PATH}/storage ${NEW_RELEASE}/storage
             
-            # 4. CORREÇÃO DO LINK PÚBLICO DE IMAGENS (Resolve 403/404)
-            # Removemos qualquer resquício e criamos o link manual absoluto para a pasta pública
-            sudo rm -rf ${BASE_DIR}_new/public/storage
-            sudo ln -sfn ${BASE_DIR}_shared/storage/app/public ${BASE_DIR}_new/public/storage
+            # 4. Ajustar permissões para o Nginx
+            sudo chown -R www-data:www-data ${NEW_RELEASE}
+            sudo chown -R www-data:www-data ${SHARED_PATH}/storage
             
-            # 5. Comandos Laravel (Rodando como www-data)
-            cd ${BASE_DIR}_new
+            # 5. Link de Storage Público
+            sudo rm -rf ${NEW_RELEASE}/public/storage
+            sudo ln -sfn ${SHARED_PATH}/storage/app/public ${NEW_RELEASE}/public/storage
+            
+            # 6. Comandos Laravel pós-deploy
+            cd ${NEW_RELEASE}
             sudo -u www-data php artisan migrate --force
-            sudo -u www-data php artisan db:seed --force
             sudo -u www-data php artisan optimize
             
-            # 6. SWAP ATÔMICO (Ativa a nova versão)
-            sudo ln -sfn ${BASE_DIR}_new ${BASE_DIR}_live
+            # 7. SWAP ATÔMICO (Ativação)
+            sudo ln -sfn ${NEW_RELEASE} ${LIVE_LINK}
             
-            # 7. Finalização e Reinicialização do PHP-FPM
+            # 8. Finalização
             sudo systemctl restart php8.3-fpm
-            sudo rm /tmp/erp_monolito_deploy.zip
+            sudo rm /tmp/${PROJECT}-deploy.zip
             
-            echo "✅ Deploy do ERP Monolito Finalizado com Sucesso!"
+            echo "✅ Deploy de $PROJECT finalizado com sucesso no padrão de hifens!"
           EOF

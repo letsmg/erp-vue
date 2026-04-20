@@ -31,18 +31,17 @@ return new class extends Migration
             $table->tinyInteger('contributor_type')->nullable();
             
             // Contatos Principais e Secundários
-            $table->string('phone1', 20)->nullable();
-            $table->string('contact1')->nullable(); // Nome da pessoa de contato 1
-            
+            $table->string('phone1', 20);
+            $table->string('contact1'); // Nome da pessoa de contato 1
+
             $table->string('phone2', 20)->nullable();
-            $table->string('contact2')->nullable(); // Nome da pessoa de contato 2
-            
-            // Mantive o campo 'phone' original caso queira usar como "Telefone Geral" 
-            // ou você pode removê-lo agora que tem o phone1 e phone2.
-            $table->string('phone', 20)->nullable(); 
+            $table->string('contact2')->nullable(); // Nome da pessoa de contato 2 
 
             // Status do cliente
             $table->boolean('is_active')->default(true);
+            
+            // Email verification
+            $table->timestamp('email_verified_at')->nullable();
 
             $table->timestamps();
         });

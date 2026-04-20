@@ -25,9 +25,9 @@ class ClientFactory extends Factory
     public function definition(): array
     {
         $documentType = fake()->randomElement(['CPF', 'CNPJ']);
-        $documentNumber = $documentType === 'CPF' 
-            ? fake()->numerify('###########')
-            : fake()->numerify('##############');
+        $documentNumber = $documentType === 'CPF'
+            ? $this->generateValidCPF()
+            : $this->generateValidCNPJ();
 
         return [
             'user_id' => null,
@@ -38,12 +38,68 @@ class ClientFactory extends Factory
             'contact1' => fake()->name(),
             'phone2' => fake()->optional(0.6)->phoneNumber(),
             'contact2' => fake()->optional(0.6)->name(),
-            'phone' => fake()->phoneNumber(),
             'state_registration' => fake()->optional(0.7)->numerify('#########'),
             'municipal_registration' => fake()->optional(0.5)->numerify('#########'),
             'contributor_type' => fake()->randomElement([1, 2, 9]),
             'is_active' => true,
         ];
+    }
+
+    /**
+     * Generate a valid CPF
+     */
+    private function generateValidCPF(): string
+    {
+        $cpf = [];
+        for ($i = 0; $i < 9; $i++) {
+            $cpf[] = fake()->randomDigit();
+        }
+
+        for ($t = 9; $t < 11; $t++) {
+            $d = 0;
+            for ($c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            $cpf[] = $d;
+        }
+
+        return implode('', $cpf);
+    }
+
+    /**
+     * Generate a valid CNPJ
+     */
+    private function generateValidCNPJ(): string
+    {
+        $cnpj = [];
+        for ($i = 0; $i < 12; $i++) {
+            $cnpj[] = fake()->randomDigit();
+        }
+
+        // First digit
+        $sum = 0;
+        $weight = 5;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit1 = $remainder < 2 ? 0 : 11 - $remainder;
+        $cnpj[] = $digit1;
+
+        // Second digit
+        $sum = 0;
+        $weight = 6;
+        for ($i = 0; $i < 13; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit2 = $remainder < 2 ? 0 : 11 - $remainder;
+        $cnpj[] = $digit2;
+
+        return implode('', $cnpj);
     }
 
     /**
@@ -53,7 +109,7 @@ class ClientFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'document_type' => 'CPF',
-            'document_number' => fake()->numerify('###########'),
+            'document_number' => $this->generateValidCPF(),
             'state_registration' => null, // PF geralmente não tem IE
             'municipal_registration' => null,
             'contributor_type' => fake()->randomElement([2, 9]), // Isento ou Não Contribuinte
@@ -67,7 +123,7 @@ class ClientFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'document_type' => 'CNPJ',
-            'document_number' => fake()->numerify('##############'),
+            'document_number' => $this->generateValidCNPJ(),
             'state_registration' => fake()->numerify('#########'),
             'municipal_registration' => fake()->numerify('#########'),
             'contributor_type' => fake()->randomElement([1, 2]), // Contribuinte ou Isento

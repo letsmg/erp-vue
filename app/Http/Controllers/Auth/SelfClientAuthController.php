@@ -94,6 +94,44 @@ class SelfClientAuthController extends Controller
     }
 
     /**
+     * Verifica o email do cliente
+     */
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return redirect()->route('client.login')
+                ->with('error', 'Usuário não encontrado.');
+        }
+
+        if (!hash_equals($hash, sha1($user->getEmailForVerification()))) {
+            return redirect()->route('client.login')
+                ->with('error', 'Link de verificação inválido.');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->route('client.login')
+                ->with('info', 'Email já verificado.');
+        }
+
+        $user->markEmailAsVerified();
+        $user->update(['is_active' => true]);
+
+        // Also activate the client record
+        $client = $this->repository->findByUserId($user->id);
+        if ($client) {
+            $client->update([
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('client.login')
+            ->with('success', 'Email verificado com sucesso! Sua conta está ativa.');
+    }
+
+    /**
      * Envia link de redefinição de senha
      */
     public function sendResetLinkEmail(SelfClientForgotPasswordRequest $request): RedirectResponse
@@ -160,7 +198,7 @@ class SelfClientAuthController extends Controller
      */
     public function showRegistrationForm()
     {
-        return inertia('Client/Register');
+        return inertia('Client/Auth/Register');
     }
 
     /**
@@ -189,12 +227,20 @@ class SelfClientAuthController extends Controller
         try {
             $data = $request->validated();
             $userData = $this->prepareUserData($data);
-            
+
             $client = $this->service->createClientWithUser($data, $userData);
 
-            return redirect()->route('client.profile')
-                ->with('success', 'Cadastro realizado com sucesso!');
+            // Enviar email de verificação
+            $client->user->sendEmailVerificationNotification();
+
+            return redirect()->route('client.login')
+                ->with('success', 'Cadastro realizado! Um link de confirmação foi enviado para seu e-mail. Clique no link para ativar sua conta e poder fazer login.');
         } catch (\Exception $e) {
+            \Log::error('Client registration error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'data' => $request->all(),
+            ]);
+
             return back()
                 ->withInput()
                 ->with('error', 'Erro ao realizar cadastro: ' . $e->getMessage());
@@ -297,14 +343,14 @@ class SelfClientAuthController extends Controller
     {
         $documentType = $this->service->getDocumentType($data['document_number']);
         $cleanDocument = preg_replace('/[^0-9]/', '', $data['document_number']);
-        
+
         return [
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'password_confirmation' => $data['password_confirmation'],
-            'access_level' => 0, // Cliente sempre nível 0
-            'is_active' => true,
+            'access_level' => 2, // CLIENT
+            'is_active' => false, // Requires email verification
         ];
     }
 

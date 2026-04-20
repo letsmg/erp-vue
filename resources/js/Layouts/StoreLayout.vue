@@ -4,12 +4,33 @@ import {
     Search, ShoppingBag, Cloud, User as UserIcon, 
     Settings, Package, LogOut, ChevronDown, Sun, Moon, Palette
 } from 'lucide-vue-next';
-import { computed, ref, watch, nextTick, onMounted, provide } from 'vue';
+import { computed, ref, watch, nextTick, onMounted, onUnmounted, provide } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 import { debounce } from 'lodash-es';
 
 const page = usePage();
 const auth = computed(() => page.props.auth);
+
+// --- Atalhos de Teclado (ALT+1, ALT+2) ---
+const handleKeyDown = (e) => {
+    if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('magic-fill'));
+    }
+    if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('magic-clear'));
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
+// -------------------------------------------
 
 // Theme state
 const theme = ref('custom'); // 'light', 'dark', or 'custom'
@@ -254,10 +275,10 @@ watch(() => showSuggestions.value, () => {
         <div class="bg-gradient-to-r from-orange-600 to-red-600 text-white py-2 px-6 flex justify-center items-center gap-4 shadow-md">
             <div class="flex items-center gap-2">
                 <Cloud class="w-4 h-4 animate-pulse" />
-                <span class="text-[10px] font-black uppercase tracking-widest">Infraestrutura Oracle Cloud Ativa</span>
+                <span class="text-[10px] font-black uppercase tracking-widest">Site blindado na Oracle com proteção Cloudflare</span>
             </div>
-            <a href="https://whatismyipaddress.com/ip/147.15.80.52" target="_blank" class="text-[10px] font-bold underline hover:text-orange-100 transition">
-                Verificar IP da Instância →
+            <a href="https://check-host.net/ip-info?host=hierarca.com" target="_blank" class="text-[10px] font-bold underline hover:text-orange-100 transition">
+                Verificar IP hierarca.com →
             </a>
         </div>
 

@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/main/pacman-contribution-graph.svg" />
+<img src="https://raw.githubusercontent.com/letsmg/erp-vue/main/pacman-contribution-graph.svg" />
 
 # 🌌 ERP Vue Laravel — Smart Business Management
 
@@ -61,10 +61,10 @@ Para realizar testes localmente verifique a config no arquivo phpunit.xml
 
 ## Atalhos de Teclado
 
-| Atalho           | Ação                                    |
-| ---------------- | --------------------------------------- |
-| CTRL + SHIFT + P | Preenche formulário com dados fictícios |
-| CTRL + SHIFT + L | Limpa campos e erros de validação       |
+| Atalho   | Ação                                    |
+| -------- | --------------------------------------- |
+| ALT + 1  | Preenche formulário com dados fictícios |
+| ALT + 2  | Limpa campos e erros de validação       |
 
 TIP
 Esses atalhos utilizam **Custom Events** disparados dentro do `AuthenticatedLayout.vue`, mantendo a lógica das páginas limpa.
@@ -76,8 +76,8 @@ Esses atalhos utilizam **Custom Events** disparados dentro do `AuthenticatedLayo
 ## 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/letsmg/erp-vue-laravel.git
-cd erp-vue-laravel
+git clone https://github.com/letsmg/erp-vue.git
+cd erp-vue
 ```
 
 ---
@@ -345,8 +345,8 @@ These shortcuts use **Custom Events** triggered inside `AuthenticatedLayout.vue`
 ## 1. Clone repository
 
 ```bash
-git clone https://github.com/letsmg/erp-vue-laravel.git
-cd erp-vue-laravel
+git clone https://github.com/letsmg/erp-vue.git
+cd erp-vue
 ```
 
 ---
@@ -577,6 +577,6 @@ MIT License
 © 2026 — Built with scalability in mind
 </p>
 
-<img src="https://raw.githubusercontent.com/letsmg/erp-vue-laravel/main/snake-dark.svg?palette=github-dark" />
+<img src="https://raw.githubusercontent.com/letsmg/erp-vue/main/snake-dark.svg?palette=github-dark" />
 
 Copyright (c) 2026 Luiz Eduardo

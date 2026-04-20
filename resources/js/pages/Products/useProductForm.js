@@ -10,6 +10,7 @@ export function useProductForm(props) {
     const form = useForm({
         // Geral
         supplier_id: '',
+        title: '',
         description: '',
         brand: '',
         category_id: '',

@@ -2,10 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ClientRequest extends FormRequest
+class ClientRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -29,19 +28,27 @@ class ClientRequest extends FormRequest
             'document_number' => [
                 'required',
                 'string',
-                $isUpdate 
+                $isUpdate
                     ? Rule::unique('clients', 'document_number')->ignore($clientId)
                     : 'unique:clients,document_number',
                 function ($attribute, $value, $fail) {
                     $cleanValue = preg_replace('/[^0-9]/', '', $value);
                     $documentType = $this->input('document_type');
-                    
-                    if ($documentType === 'CPF' && strlen($cleanValue) !== 11) {
-                        $fail('CPF deve ter 11 dígitos');
+
+                    if ($documentType === 'CPF') {
+                        if (strlen($cleanValue) !== 11) {
+                            $fail('CPF deve ter 11 dígitos');
+                        } elseif (!$this->isValidCPF($cleanValue)) {
+                            $fail('CPF informado é inválido');
+                        }
                     }
-                    
-                    if ($documentType === 'CNPJ' && strlen($cleanValue) !== 14) {
-                        $fail('CNPJ deve ter 14 dígitos');
+
+                    if ($documentType === 'CNPJ') {
+                        if (strlen($cleanValue) !== 14) {
+                            $fail('CNPJ deve ter 14 dígitos');
+                        } elseif (!$this->isValidCNPJ($cleanValue)) {
+                            $fail('CNPJ informado é inválido');
+                        }
                     }
                 },
             ],
@@ -59,6 +66,7 @@ class ClientRequest extends FormRequest
                         $fail('Inscrição Estadual é obrigatória para CNPJ');
                     }
                 },
+                'required_if:document_type,CNPJ',
             ],
             'municipal_registration' => ['nullable', 'string', 'max:20'],
             'contributor_type' => ['nullable', 'integer', 'in:1,2,9'],
@@ -134,5 +142,70 @@ class ClientRequest extends FormRequest
                 'document_number' => preg_replace('/[^0-9]/', '', $this->input('document_number')),
             ]);
         }
+    }
+
+    /**
+     * Valida CPF
+     */
+    private function isValidCPF(string $cpf): bool
+    {
+        // Verifica se todos os dígitos são iguais
+        if (preg_match('/(\d)\1{10}/', $cpf)) {
+            return false;
+        }
+
+        // Calcula dígitos verificadores
+        for ($t = 9; $t < 11; $t++) {
+            for ($d = 0, $c = 0; $c < $t; $c++) {
+                $d += $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ($cpf[$c] != $d) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Valida CNPJ
+     */
+    private function isValidCNPJ(string $cnpj): bool
+    {
+        // Verifica se todos os dígitos são iguais
+        if (preg_match('/(\d)\1{13}/', $cnpj)) {
+            return false;
+        }
+
+        // Primeiro dígito verificador
+        $sum = 0;
+        $weight = 5;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit1 = $remainder < 2 ? 0 : 11 - $remainder;
+
+        if ($cnpj[12] != $digit1) {
+            return false;
+        }
+
+        // Segundo dígito verificador
+        $sum = 0;
+        $weight = 6;
+        for ($i = 0; $i < 13; $i++) {
+            $sum += $cnpj[$i] * $weight;
+            $weight = $weight === 2 ? 9 : $weight - 1;
+        }
+        $remainder = $sum % 11;
+        $digit2 = $remainder < 2 ? 0 : 11 - $remainder;
+
+        if ($cnpj[13] != $digit2) {
+            return false;
+        }
+
+        return true;
     }
 }
