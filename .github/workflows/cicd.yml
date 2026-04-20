@@ -42,7 +42,7 @@ jobs:
 
       - name: 🚀 Deploy Atômico
         run: |
-          PROJECT_NAME="erp-modular"
+          PROJECT_NAME="erp-vue"
           scp deploy.zip ubuntu@${{ secrets.SERVER_IP }}:/tmp/${PROJECT_NAME}-deploy.zip
 
           ssh ubuntu@${{ secrets.SERVER_IP }} << 'EOF'
