@@ -52,8 +52,8 @@ jobs:
             PROJECT="erp-vue"
             BASE_PATH="/var/www/$PROJECT"
             SHARED_PATH="${BASE_PATH}-shared"
-            LIVE_LINK="${BASE_PATH}-live"
-            NEW_RELEASE="${BASE_PATH}-new"
+            LIVE_LINK="${BASE_PATH}-current"
+            NEW_RELEASE="${BASE_PATH}-releases"
             
             # 1. Preparar estrutura inicial se não existir
             sudo mkdir -p ${SHARED_PATH}/storage/app/public

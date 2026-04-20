@@ -319,12 +319,13 @@ class ClientTest extends TestCase
             'phone1' => '(11) 99999-8888',
             'document_type' => $client->document_type,
             'document_number' => $client->document_number,
+            'state_registration' => $client->state_registration ?? '', // Include state_registration
         ];
 
         $response = $this->actingAs($admin)->put("/api/v1/clients/{$client->id}", $data, ['Accept' => 'application/json']);
 
         $response->assertStatus(200); // Retorna JSON com sucesso
-        
+
         $client->refresh();
         $this->assertEquals('Updated Client Name', $client->name);
         $this->assertEquals('(11) 99999-8888', $client->phone1);
