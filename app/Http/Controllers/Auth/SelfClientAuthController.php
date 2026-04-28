@@ -29,7 +29,7 @@ class SelfClientAuthController extends Controller
     /**
      * Mostra formulário de login do cliente
      */
-    public function showLogin()
+    public function showLogin(Request $request)
     {
         if (auth()->check()) {
             if (auth()->user()->isClient()) {
@@ -38,6 +38,11 @@ class SelfClientAuthController extends Controller
             if (auth()->user()->isStaff()) {
                 return redirect()->route('dashboard');
             }
+        }
+
+        // Armazena URL de redirecionamento se fornecida
+        if ($request->has('redirect')) {
+            session(['url.intended' => $request->input('redirect')]);
         }
 
         return Inertia::render('Client/Auth/Login', [
@@ -74,6 +79,13 @@ class SelfClientAuthController extends Controller
                 return back()->withErrors([
                     'email' => 'Sua conta de cliente está bloqueada. Entre em contato com a administração.',
                 ]);
+            }
+
+            // Verifica se há URL de redirecionamento armazenada
+            $intendedUrl = session()->pull('url.intended');
+            
+            if ($intendedUrl) {
+                return redirect($intendedUrl);
             }
 
             // Redireciona para dashboard do cliente

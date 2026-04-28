@@ -96,7 +96,8 @@ const formatCurrency = (value) => {
 
 const addToCart = (product) => {
     if (!page.props.auth?.user) {
-        router.get(route('client.login'));
+        // Redireciona para login com URL de retorno
+        router.get(route('client.login', { redirect: window.location.pathname }));
         return;
     }
 
