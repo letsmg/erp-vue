@@ -30,6 +30,11 @@ return Application::configure(basePath: dirname(__DIR__))
             ApiJsonResponse::class,
         ]);
 
+        // Exclui webhook do Stripe da validação CSRF
+        $middleware->validateCsrfTokens(except: [
+            'stripe/webhook',
+        ]);
+
         // Registra aliases de middleware
         $middleware->alias([
             'client' => ClientMiddleware::class,
