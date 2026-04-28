@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Services\OrderService;
 use App\Services\PaymentService;
+use App\Services\StripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -13,7 +14,8 @@ class CheckoutController extends Controller
 {
     public function __construct(
         private readonly OrderService $orderService,
-        private readonly PaymentService $paymentService
+        private readonly PaymentService $paymentService,
+        private readonly StripeService $stripeService
     ) {}
 
     /**
@@ -38,16 +40,12 @@ class CheckoutController extends Controller
     }
 
     /**
-     * Cria preferência de pagamento no Mercado Pago
+     * Cria PaymentIntent no Stripe
      */
-    public function createPaymentPreference(Request $request, int $saleId): JsonResponse
+    public function createPaymentIntent(Request $request, int $saleId): JsonResponse
     {
-        $request->validate([
-            'payment_type' => 'required|in:credit_card,pix,boleto',
-        ]);
-
         $userId = auth()->id();
-        
+
         // Verifica se o usuário pode acessar o pedido
         $orderResult = $this->orderService->getOrderDetails($saleId, $userId);
         if (!$orderResult['success']) {
@@ -56,46 +54,43 @@ class CheckoutController extends Controller
 
         $sale = $orderResult['sale'];
 
-        // Criar preferência no Mercado Pago
-        $preferenceData = $this->createMercadoPagoPreference($sale, $request->input('payment_type'));
+        // Criar PaymentIntent no Stripe
+        $paymentData = $this->stripeService->createPaymentIntent($sale, []);
 
-        if (!$preferenceData) {
-            return $this->error('Erro ao criar preferência de pagamento', 500);
+        if (!$paymentData) {
+            return $this->error('Erro ao criar intenção de pagamento', 500);
         }
 
         // Criar registro de pagamento
         $paymentResult = $this->paymentService->createPaymentPreference($saleId, [
-            'preference_id' => $preferenceData['id'],
-            'payment_type' => $request->input('payment_type'),
+            'preference_id' => $paymentData['payment_intent_id'],
+            'payment_type' => 'stripe',
             'metadata' => [
                 'user_id' => $userId,
                 'sale_id' => $saleId,
+                'client_secret' => $paymentData['client_secret'],
             ],
         ]);
 
         if ($paymentResult['success']) {
             return $this->success([
-                'preference_id' => $preferenceData['id'],
-                'init_point' => $preferenceData['init_point'],
-                'sandbox_init_point' => $preferenceData['sandbox_init_point'],
-            ], 'Preferência de pagamento criada');
+                'client_secret' => $paymentData['client_secret'],
+                'payment_intent_id' => $paymentData['payment_intent_id'],
+                'publishable_key' => $this->stripeService->getPublishableKey(),
+                'amount' => $paymentData['amount'],
+            ], 'Intenção de pagamento criada');
         }
 
         return $this->error($paymentResult['message'], 500);
     }
 
     /**
-     * Webhook do Mercado Pago
+     * Webhook do Mercado Pago (legado - mantido para compatibilidade)
      */
     public function webhook(Request $request): JsonResponse
     {
-        $result = $this->paymentService->processWebhook($request->all());
-
-        if ($result['success']) {
-            return response()->json(['status' => 'processed'], 200);
-        }
-
-        return response()->json(['status' => 'error'], 400);
+        // Webhook agora é tratado pelo StripeWebhookController
+        return response()->json(['status' => 'use_stripe_webhook'], 200);
     }
 
     /**

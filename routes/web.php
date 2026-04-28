@@ -13,6 +13,7 @@ use App\Http\Controllers\SearchSuggestionsController;
 use App\Http\Controllers\RedisMonitorController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\VendasController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -222,7 +223,7 @@ Route::middleware(['auth', 'client'])->prefix('cliente')->name('client.')->group
 
 Route::middleware(['auth', 'client'])->prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/pedido', [CheckoutController::class, 'createOrder'])->name('create.order');
-    Route::post('/pagamento/{saleId}', [CheckoutController::class, 'createPaymentPreference'])->name('create.payment');
+    Route::post('/pagamento/{saleId}', [CheckoutController::class, 'createPaymentIntent'])->name('create.payment');
 });
 
 Route::prefix('checkout')->name('checkout.')->group(function () {
@@ -231,6 +232,16 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/pendente/{saleId}', [CheckoutController::class, 'pending'])->name('pending');
     Route::post('/webhook', [CheckoutController::class, 'webhook'])->name('webhook');
 });
+
+/*
+|--------------------------------------------------------------------------
+| STRIPE WEBHOOK (PÚBLICO)
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook')
+    ->withoutMiddleware(['web', 'auth']);
 
 /*
 |--------------------------------------------------------------------------

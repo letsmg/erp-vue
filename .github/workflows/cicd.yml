@@ -73,6 +73,13 @@ jobs:
             sudo ln -sfn ${SHARED_PATH}/.env ${NEW_RELEASE}/.env
             sudo rm -rf ${NEW_RELEASE}/storage
             sudo ln -sfn ${SHARED_PATH}/storage ${NEW_RELEASE}/storage
+
+            # 3.5. CONFIGURAR SENTRY SE HOUVER DSN NO .ENV
+            if grep -q "SENTRY_LARAVEL_DSN=" ${SHARED_PATH}/.env; then
+                echo "✓ Sentry DSN encontrado, monitoramento de erros ativo"
+            else
+                echo "ℹ Sentry DSN não configurado, monitoramento de erros desativado"
+            fi
             
             # 4. AJUSTAR PERMISSÕES DE DONO (CORREÇÃO ERRO 500)
             # www-data é o usuário do Nginx/PHP-FPM. Ele precisa ser o dono para ler/escrever.

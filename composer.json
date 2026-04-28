@@ -9,8 +9,8 @@
     ],
     "license": "MIT",
     "require": {
-        "barryvdh/laravel-dompdf": "^3.1",
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "fakerphp/faker": "*",
         "google/cloud-vision": "*",
         "inertiajs/inertia-laravel": "^2.0",
@@ -18,7 +18,9 @@
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
         "resend/resend-php": "*",
+        "sentry/sentry-laravel": "*",
         "spatie/laravel-sitemap": "*",
+        "stripe/stripe-php": "*",
         "tightenco/ziggy": "*"
     },
     "require-dev": {
