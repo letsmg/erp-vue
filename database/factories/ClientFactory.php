@@ -6,7 +6,6 @@ use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Client>
@@ -39,10 +38,7 @@ class ClientFactory extends Factory
             'display_name' => $displayName,
             'email_hash' => hash('sha256', $email),
             'email_encrypted' => Crypt::encryptString($email),
-            'name' => $displayName,
-            'email' => $email,
             'document_type' => $documentType,
-            'document_number' => $documentNumber,
             'document_hash' => hash('sha256', $documentNumber),
             'document_encrypted' => Crypt::encryptString($documentNumber),
             'phone1' => $phone1,
@@ -115,7 +111,6 @@ class ClientFactory extends Factory
             $doc = $this->generateValidCPF();
             return [
                 'document_type' => 'CPF',
-                'document_number' => $doc,
                 'document_hash' => hash('sha256', $doc),
                 'document_encrypted' => Crypt::encryptString($doc),
                 'state_registration' => null,
@@ -131,7 +126,6 @@ class ClientFactory extends Factory
             $doc = $this->generateValidCNPJ();
             return [
                 'document_type' => 'CNPJ',
-                'document_number' => $doc,
                 'document_hash' => hash('sha256', $doc),
                 'document_encrypted' => Crypt::encryptString($doc),
                 'state_registration' => fake()->numerify('#########'),

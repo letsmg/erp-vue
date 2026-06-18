@@ -23,35 +23,26 @@ class ClientRequest extends BaseFormRequest
         $isUpdate = !empty($clientId);
 
         $rules = [
-            'name' => ['required', 'string', 'max:255'],
+            'display_name' => ['nullable', 'string', 'max:255'],
+            'document_number' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
+                $cleanValue = preg_replace('/[^0-9]/', '', $value);
+                $documentType = $this->input('document_type');
+                if ($documentType === 'CPF') {
+                    if (strlen($cleanValue) !== 11) {
+                        $fail('CPF deve ter 11 dígitos');
+                    } elseif (!$this->isValidCPF($cleanValue)) {
+                        $fail('CPF informado é inválido');
+                    }
+                }
+                if ($documentType === 'CNPJ') {
+                    if (strlen($cleanValue) !== 14) {
+                        $fail('CNPJ deve ter 14 dígitos');
+                    } elseif (!$this->isValidCNPJ($cleanValue)) {
+                        $fail('CNPJ informado é inválido');
+                    }
+                }
+            }],
             'document_type' => ['required', 'in:CPF,CNPJ'],
-            'document_number' => [
-                'required',
-                'string',
-                $isUpdate
-                    ? Rule::unique('clients', 'document_number')->ignore($clientId)
-                    : 'unique:clients,document_number',
-                function ($attribute, $value, $fail) {
-                    $cleanValue = preg_replace('/[^0-9]/', '', $value);
-                    $documentType = $this->input('document_type');
-
-                    if ($documentType === 'CPF') {
-                        if (strlen($cleanValue) !== 11) {
-                            $fail('CPF deve ter 11 dígitos');
-                        } elseif (!$this->isValidCPF($cleanValue)) {
-                            $fail('CPF informado é inválido');
-                        }
-                    }
-
-                    if ($documentType === 'CNPJ') {
-                        if (strlen($cleanValue) !== 14) {
-                            $fail('CNPJ deve ter 14 dígitos');
-                        } elseif (!$this->isValidCNPJ($cleanValue)) {
-                            $fail('CNPJ informado é inválido');
-                        }
-                    }
-                },
-            ],
             'phone1' => ['nullable', 'string', 'max:20'],
             'contact1' => ['nullable', 'string', 'max:255'],
             'phone2' => ['nullable', 'string', 'max:20'],

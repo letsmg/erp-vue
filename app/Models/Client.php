@@ -23,10 +23,7 @@ class Client extends Authenticatable
         'display_name',
         'email_hash',
         'email_encrypted',
-        'name',
-        'email',
         'document_type',
-        'document_number',
         'document_hash',
         'document_encrypted',
         'phone1',
@@ -86,6 +83,8 @@ class Client extends Authenticatable
         return $this->hasMany(ShoppingCart::class, 'user_id', 'user_id');
     }
 
+    // ─── Accessors ───
+
     public function getDecryptedFirstNameAttribute(): ?string
     {
         if ($this->first_name_encrypted) {
@@ -115,7 +114,7 @@ class Client extends Authenticatable
         if ($this->document_encrypted) {
             return Crypt::decryptString($this->document_encrypted);
         }
-        return $this->document_number;
+        return null;
     }
 
     public function getDecryptedPhone1Attribute(): ?string
@@ -139,19 +138,16 @@ class Client extends Authenticatable
         return $this->addresses()->where('is_delivery_address', true)->first();
     }
 
+    // ─── Helpers ───
+
     public function isCPF(): bool
     {
-        return $this->document_type === 'CPF' && strlen($this->document_number ?? '') === 11;
+        return $this->document_type === 'CPF';
     }
 
     public function isCNPJ(): bool
     {
-        return $this->document_type === 'CNPJ' && strlen($this->document_number ?? '') === 14;
-    }
-
-    public function getNameAttribute($value)
-    {
-        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+        return $this->document_type === 'CNPJ';
     }
 
     public function getContact1Attribute($value)
@@ -181,7 +177,7 @@ class Client extends Authenticatable
 
     public function getFormattedDocumentAttribute(): string
     {
-        $doc = $this->decrypted_document ?? $this->document_number;
+        $doc = $this->decrypted_document ?? '';
         if ($this->isCPF()) {
             $doc = preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $doc);
         } elseif ($this->isCNPJ()) {

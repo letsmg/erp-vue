@@ -36,7 +36,8 @@ class SelfClientRepository
     public function findByDocument(string $document): ?Client
     {
         $cleanDocument = preg_replace('/[^0-9]/', '', $document);
-        return Client::where('document_number', $cleanDocument)->first();
+        $documentHash = hash('sha256', $cleanDocument);
+        return Client::where('document_hash', $documentHash)->first();
     }
 
     /**

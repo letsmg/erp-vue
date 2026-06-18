@@ -21,7 +21,6 @@ class SelfClientRequest extends BaseFormRequest
     public function rules(): array
     {
         $rules = [
-            'name' => 'required|string|max:255',
             'document_number' => ['required', 'string', 'max:20', function ($attribute, $value, $fail) {
                 $cleanDocument = preg_replace('/[^0-9]/', '', $value);
                 if (strlen($cleanDocument) === 11) {

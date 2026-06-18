@@ -11,7 +11,7 @@ class ClientRepository
     public function getFiltered(array $filters): LengthAwarePaginator
     {
         $query = Client::with(['user', 'addresses'])
-            ->orderBy('name');
+            ->orderBy('display_name');
 
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
@@ -19,9 +19,10 @@ class ClientRepository
             if (strlen($search) >= 4) {
                 $query->where(function ($q) use ($search) {
                     $searchTerm = "%{$search}%";
-                    $q->where('name', 'ilike', $searchTerm)
-                      ->orWhere('document_number', 'like', $searchTerm)
-                      ->orWhere('display_name', 'ilike', $searchTerm);
+                    $q->where('display_name', 'ilike', $searchTerm)
+                      ->orWhereHas('user', function ($uq) use ($searchTerm) {
+                          $uq->where('display_name', 'ilike', $searchTerm);
+                      });
                 });
             }
         }
@@ -58,7 +59,8 @@ class ClientRepository
 
     public function findByDocument(string $document): ?Client
     {
-        return Client::where('document_number', $document)->first();
+        $documentHash = hash('sha256', $document);
+        return Client::where('document_hash', $documentHash)->first();
     }
 
     public function findByUserId(int $userId): ?Client
@@ -111,7 +113,8 @@ class ClientRepository
 
     public function documentExists(string $document, ?int $excludeId = null): bool
     {
-        $query = Client::where('document_number', $document);
+        $documentHash = hash('sha256', $document);
+        $query = Client::where('document_hash', $documentHash);
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
@@ -123,8 +126,8 @@ class ClientRepository
     public function getActiveForSelect(): array
     {
         return Client::where('is_active', true)
-            ->orderBy('name')
-            ->pluck('name', 'id')
+            ->orderBy('display_name')
+            ->pluck('display_name', 'id')
             ->toArray();
     }
 }

@@ -238,10 +238,10 @@ class SelfClientAuthController extends Controller
 
     private function prepareClientRegistrationData(array $data): array
     {
-        $cleanDocument = preg_replace('/[^0-9]/', '', $data['document_number']);
-        $firstName = $data['first_name'] ?? explode(' ', $data['name'] ?? 'Cliente')[0];
-        $lastName = $data['last_name'] ?? substr(strstr(($data['name'] ?? 'Cliente'), ' ' ?: ' '), 1) ?: 'Cliente';
-        $displayName = $data['display_name'] ?? $data['name'] ?? "{$firstName} {$lastName}";
+        $cleanDocument = preg_replace('/[^0-9]/', '', $data['document_number'] ?? '');
+        $firstName = $data['first_name'] ?? '';
+        $lastName = $data['last_name'] ?? '';
+        $displayName = $data['display_name'] ?? "{$firstName} {$lastName}";
         $email = $data['email'];
         return [
             'password' => Hash::make($data['password']),
@@ -252,10 +252,7 @@ class SelfClientAuthController extends Controller
             'display_name' => $displayName,
             'email_hash' => hash('sha256', $email),
             'email_encrypted' => Crypt::encryptString($email),
-            'name' => $displayName,
-            'email' => $email,
             'document_type' => strlen($cleanDocument) === 11 ? 'CPF' : 'CNPJ',
-            'document_number' => $cleanDocument,
             'document_hash' => hash('sha256', $cleanDocument),
             'document_encrypted' => Crypt::encryptString($cleanDocument),
             'phone1' => $data['phone1'],

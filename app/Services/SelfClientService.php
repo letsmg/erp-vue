@@ -69,10 +69,10 @@ class SelfClientService
     {
         return [
             'id' => $client->id,
-            'name' => $client->name,
+            'display_name' => $client->display_name,
             'document_number' => $client->formatted_document,
             'document_type' => $client->contributor_type_description,
-            'email' => $client->user->email,
+            'email' => $client->decrypted_email,
             'phone1' => $client->phone1,
             'phone2' => $client->phone2,
             'is_active' => $client->is_active,

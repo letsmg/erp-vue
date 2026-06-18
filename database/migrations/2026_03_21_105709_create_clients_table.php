@@ -27,11 +27,7 @@ return new class extends Migration
 
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
 
-            $table->string('name')->nullable();
-            $table->string('email')->nullable();
-
             $table->enum('document_type', ['CPF', 'CNPJ']);
-            $table->string('document_number');
             $table->string('document_hash', 64)->nullable()->unique();
             $table->text('document_encrypted')->nullable();
 
